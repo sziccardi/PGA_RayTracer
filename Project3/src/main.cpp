@@ -145,12 +145,12 @@ Color getLighting(Hit intersection) {
                 float coefficient = 1.f / lightDir.magnitudeSqr();
                 //cout << "color = " << pl->mColor << endl;
                 float myDot = dot(intersection.mNormal, lightDir.normalized());
-                if (intersection.mNormal.y > 0.8) {
+                /*if (intersection.mNormal.y > 0.8) {
                     cout << "pos = " << intersection.mPosition << endl;
                     cout << "normal = " << intersection.mNormal << endl;
                     cout << "light dir = " << lightDir.normalized() << endl;
                     cout << "dot = " << std::to_string(myDot) << endl;
-                }
+                }*/
                 totalColor = totalColor + coefficient * pl->mColor * std::max(0.f, myDot);
             }
         }
