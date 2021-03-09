@@ -15,6 +15,8 @@ struct Color{
   Color(float r, float g, float b) : r(r), g(g), b(b) {}
   Color() : r(0), g(0), b(0) {}
 
+  float getIntensity() { return (r + g + b) / 3.f; }
+
   operator std::string() const {
       std::string total = "(";
       total += std::to_string(r) + ", ";

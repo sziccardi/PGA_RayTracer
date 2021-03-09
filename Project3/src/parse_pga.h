@@ -681,7 +681,7 @@ void parseSceneFile(std::string fileName){
         myFile.close();
     } else cout << "Unable to open file";
 
-
+    printf("found %d lights\n", lights.size());
   printf("Orthagonal Camera Basis:\n");
   right = cross(forward, up);
   up = cross(right, forward);
