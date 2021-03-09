@@ -683,10 +683,16 @@ void parseSceneFile(std::string fileName){
 
     printf("found %d lights\n", lights.size());
   printf("Orthagonal Camera Basis:\n");
-  right = cross(forward, up);
-  up = cross(right, forward);
-  right = right.normalized();
-  up = up.normalized();
+  right = cross(up, forward);
+  
+  //v1 = up, v2 = forward, v3 = right
+  Dir3D u1 = up;
+  Dir3D u2 = forward - dot(u1, forward) / u1.magnitudeSqr() * u1;
+  Dir3D u3 = right - dot(u1, right) / u1.magnitudeSqr() * u1 - dot(u2, right) / u2.magnitudeSqr() * u2;
+
+  up = u1.normalized();
+  forward = u2.normalized();
+  right = u3.normalized();
 
   forward.print("forward");
   right.print("right");

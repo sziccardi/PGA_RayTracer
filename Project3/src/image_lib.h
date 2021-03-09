@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <algorithm>
 
 #include "stb_image.h"
 #include "stb_image_write.h"
@@ -24,7 +25,13 @@ struct Color{
       total += std::to_string(b) + ")";
       return total;
   }
-
+  //https://64.github.io/tonemapping/
+  Color getTonemapped() {
+      float rNew = std::min(r, 1.0f);
+      float gNew = std::min(g, 1.0f);
+      float bNew = std::min(b, 1.0f);
+      return Color(rNew, gNew, bNew);
+  }
 };
 
 inline Color operator*(Color c, float s) {

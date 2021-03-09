@@ -29,7 +29,8 @@ int main(int argc, char** argv) {
             float u = ((imgW) * ((i + 0.5) / imgW) - halfW);
             float v = (halfH - (imgH) * ((j + 0.5) / imgH));
             // p : the point u,v in 3D camera coordinates
-            Point3D p = eye - d * forward + u * right + v * up;
+            Point3D p = d * forward + u * right + v * up + eye;
+            //cout << p << endl;
             // rayDir : ray starting at eye and going through the image plane at p
             Dir3D rayDir = (p - eye);
             // rayLine : line version of the ray
@@ -129,11 +130,32 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
 Color getLighting(Hit intersection) {
     Color totalColor = Color(0, 0, 0);
     for (Light* l : lights) {
+        //cout << "light type = " << std::to_string(l->mType) << endl;
         if (l->mType == AMBIENT) {
             Color myMult = l->mColor * intersection.mMaterial.mAmbientColor;
             totalColor = totalColor + myMult;
         } else if (l->mType == SPOT) {
+            SpotLight* sl = (SpotLight*)(l); 
+            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.5f), vee(sl->mPosition, (intersection.mPosition + intersection.mNormal * 0.5f)).normalized());
+            if (!lightIntersect.mIntersected) {
+                Dir3D lightToSphere = (intersection.mPosition) - sl->mPosition;
+                float angle = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
+                float myDot = dot(intersection.mNormal, -1.f * sl->mDirection.normalized());
+                //cout << "spotlight! angle " << std::to_string(angle) << endl;
+                if (abs(angle) < sl->mMinAngle) {
+                    //cout << "like point!" << endl;
+                    //cout << "dot: " << std::to_string(myDot) << endl;
+                    totalColor = totalColor + intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, myDot);
+                }
+                else if (abs(angle) > sl->mMinAngle && abs(angle) < sl->mMaxAngle) {
+                    float range = (sl->mMaxAngle - sl->mMinAngle);
+                    float diff = sl->mMaxAngle - abs(angle);
 
+                    //cout << "linear fall off!" << endl;
+                    //cout << "dot: " << std::to_string(myDot) << endl;
+                    totalColor = totalColor + (diff / range) * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, myDot);
+                }
+            }
         }
         else if (l->mType == DIRECTIONAL) {
             DirectionalLight* dl = (DirectionalLight*)(l);
@@ -151,9 +173,15 @@ Color getLighting(Hit intersection) {
                 float coefficient = 1.f / lightDir.magnitudeSqr();
                 float myDot = dot(intersection.mNormal, lightDir.normalized());
                 totalColor = totalColor + coefficient * intersection.mMaterial.mDiffuseColor * pl->mColor * std::max(0.f, myDot);
+
+                Dir3D v = (eye - intersection.mPosition).normalized();
+                Dir3D h = (v + lightDir.normalized()).normalized();
+                myDot = dot(intersection.mNormal, h);
+                totalColor = totalColor + coefficient * intersection.mMaterial.mSpecularColor * pl->mColor * std::pow(std::max(0.f, myDot), intersection.mMaterial.mSpecularPower);
             }
         }
         
     }
-    return totalColor;
+
+    return totalColor.getTonemapped();
 }

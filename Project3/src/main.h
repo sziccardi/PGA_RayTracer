@@ -5,6 +5,9 @@
 #define _USE_MATH_DEFINES
 #endif
 
+#include <math.h>
+#include <algorithm>
+
 //Images Lib includes:
 #define STB_IMAGE_IMPLEMENTATION //only place once in one .cpp file
 #define STB_IMAGE_WRITE_IMPLEMENTATION //only place once in one .cpp files
