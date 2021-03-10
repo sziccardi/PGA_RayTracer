@@ -136,32 +136,24 @@ Color getLighting(Hit intersection) {
             totalColor = totalColor + myMult;
         } else if (l->mType == SPOT) {
             SpotLight* sl = (SpotLight*)(l); 
-            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.05f), vee(sl->mPosition, (intersection.mPosition + intersection.mNormal * 0.05f)).normalized());
-            if (lightIntersect.mIntersected) {
+            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.05f), vee((intersection.mPosition + intersection.mNormal * 0.05f), sl->mPosition).normalized());
+            if (!lightIntersect.mIntersected) {
                 Dir3D lightToSphere = (intersection.mPosition) - sl->mPosition;
                 float angle = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
                 float deflectionScaling = dot(intersection.mNormal, -1.f * sl->mDirection.normalized());
-                //cout << "spotlight! angle " << std::to_string(angle) << endl;
-                // if (lightToSphere.magnitude() < 5.0f) {
-                        // cout << "very small: " << std::to_string(lightToSphere.magnitudeSqr()) << endl;
+                
+                float diffuse = 1;
 
-                    // }
-                if (angle < (sl->mMinAngle / 2.f)) {
-                    //cout << "like point!" << endl;
-                    //cout << "dot: " << std::to_string(deflectionScaling) << endl;
-                    
-                    totalColor = totalColor + intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
-                }
-                else if (angle > (sl->mMinAngle / 2.f) && angle < (sl->mMaxAngle / 2.f)) {
-                    float range = (sl->mMaxAngle / 2.f - sl->mMinAngle / 2.f);
-                    float diff = sl->mMaxAngle / 2.f - abs(angle);
+                if (angle > sl->mMaxAngle) {
+                   diffuse = 0;
+                } else if (angle > sl->mMinAngle && angle < sl->mMaxAngle) {
+                    float range = sl->mMaxAngle - sl->mMinAngle;
+                    float diff = sl->mMaxAngle - angle;
 
-                    //cout << "linear fall off!" << endl;
-                    if ((diff / range) > 1) {
-                        cout << "dot: " << std::to_string((diff / range)) << endl;
-                    }
-                    totalColor = totalColor + 0.8f * (diff / range) * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+                    diffuse = (diff / range);
                 }
+
+                totalColor = totalColor + diffuse * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
             }
         }
         else if (l->mType == DIRECTIONAL) {
