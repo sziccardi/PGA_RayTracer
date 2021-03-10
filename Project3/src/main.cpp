@@ -174,10 +174,21 @@ Color getLighting(Hit intersection) {
                 float myDot = dot(intersection.mNormal, lightDir.normalized());
                 totalColor = totalColor + coefficient * intersection.mMaterial.mDiffuseColor * pl->mColor * std::max(0.f, myDot);
 
+                // specular amount = ks * I * max(0 , dot(n, h)) ^ p
+                // ks: specular color
+                // v: intersection to eye
+                // l: intersection to light
+                // h: (v + l).normalized()
+                // n: surface normal
+                // p: specular coefficient
+                // I: light color
+                Color ks = intersection.mMaterial.mSpecularColor;
                 Dir3D v = (eye - intersection.mPosition).normalized();
-                Dir3D h = (v + lightDir.normalized()).normalized();
-                myDot = dot(intersection.mNormal, h);
-                totalColor = totalColor + coefficient * intersection.mMaterial.mSpecularColor * pl->mColor * std::pow(std::max(0.f, myDot), intersection.mMaterial.mSpecularPower);
+                Dir3D h = (v - lightDir.normalized()).normalized();
+                Dir3D n = intersection.mNormal;
+                float p = intersection.mMaterial.mSpecularPower;
+                Color I = pl->mColor;
+                totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(n, h)), p);
             }
         }
         
