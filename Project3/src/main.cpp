@@ -30,18 +30,16 @@ int main(int argc, char** argv) {
             float v = (halfH - (imgH) * ((j + 0.5) / imgH));
             // p : the point u,v in 3D camera coordinates
             Point3D p = d * forward + u * right + v * up + eye;
-            //cout << p << endl;
+            
             // rayDir : ray starting at eye and going through the image plane at p
             Dir3D rayDir = (p - eye);
             // rayLine : line version of the ray
             Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
-            //TODO starting here is the loop over all objects?
 
             Hit myHit = findIntersection(eye, rayLine);
             Color color;
             if (myHit.mIntersected) {
-                color = getLighting(myHit); //Color(std::abs(myHit.mNormal.x), std::abs(myHit.mNormal.y), std::abs(myHit.mNormal.z)); //TODO do color calculations
-                //cout << color << endl;
+                color = getLighting(myHit);
             }
             else color = background;
             outputImg.setPixel(i, j, color);
@@ -219,6 +217,14 @@ Color getLighting(Hit intersection) {
             if (!lightIntersect.mIntersected) {
                 float deflectionScaling = dot(intersection.mNormal, dl->mDirection.normalized());
                 totalColor = totalColor + intersection.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
+
+                Color ks = intersection.mMaterial.mSpecularColor;
+                Dir3D v = (eye - intersection.mPosition).normalized();
+                Dir3D h = (v + dl->mDirection).normalized();
+                Dir3D n = intersection.mNormal;
+                float p = intersection.mMaterial.mSpecularPower;
+                Color I = dl->mColor;
+                totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);
             }
         }
         else if (l->mType == POINT) {
