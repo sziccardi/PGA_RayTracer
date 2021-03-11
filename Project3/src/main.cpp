@@ -22,29 +22,83 @@ int main(int argc, char** argv) {
 
     Image outputImg = Image(img_width, img_height);
     auto t_start = std::chrono::high_resolution_clock::now();
+
     for (int i = 0 / 2; i < img_width; i++) {
         for (int j = 0 / 2; j < img_height; j++) {
-            //cast 1 ray per pixel in the image plane
-            // (u,v) : coordinate on the image plane for the center of the pixel
-            float u = (halfW - (imgW) * ((i + 0.5) / imgW));
-            float v = (halfH - (imgH) * ((j + 0.5) / imgH));
-            // p : the point u,v in 3D camera coordinates
-            Point3D p = d * forward + u * right + v * up + eye;
-            //cout << p << endl;
-            // rayDir : ray starting at eye and going through the image plane at p
-            Dir3D rayDir = (p - eye);
-            // rayLine : line version of the ray
-            Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
-            //TODO starting here is the loop over all objects?
 
-            Hit myHit = findIntersection(eye, rayLine);
-            Color color;
-            if (myHit.mIntersected) {
-                color = getLighting(myHit); //Color(std::abs(myHit.mNormal.x), std::abs(myHit.mNormal.y), std::abs(myHit.mNormal.z)); //TODO do color calculations
-                //cout << color << endl;
+            if (sampling.mType == JITTERED) {
+
+                float red = 0, green = 0, blue = 0, alpha = 1;
+
+                for (float m = (1.f / sampling.sampleSize) / 2; m < 1; m += 1.f / sampling.sampleSize) {
+                    for (float n = (1.f / sampling.sampleSize) / 2; n < 1; n += 1.f / sampling.sampleSize) {
+                        // m and n now refer to the center of each ray location we want
+                        // Add some noise, then send the ray.
+                        // cout << "m, n: " << m << ", " << n << endl;
+                        float u = (halfW - (imgW) * ((i + m + randomPixelLocationNoise((1.f / sampling.sampleSize) / 2)) / imgW));
+                        float v = (halfH - (imgH) * ((j + n + randomPixelLocationNoise((1.f / sampling.sampleSize) / 2)) / imgH));
+
+                        // p : the point u,v in 3D camera coordinates
+                        Point3D p = d * forward + u * right + v * up + eye;
+                        //cout << p << endl;
+                        // rayDir : ray starting at eye and going through the image plane at p
+                        Dir3D rayDir = (p - eye);
+                        // rayLine : line version of the ray
+                        Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
+                        //TODO starting here is the loop over all objects?
+
+                        Hit myHit = findIntersection(eye, rayLine);
+                        Color color;
+                        if (myHit.mIntersected) {
+                            color = getLighting(myHit); //Color(std::abs(myHit.mNormal.x), std::abs(myHit.mNormal.y), std::abs(myHit.mNormal.z)); //TODO do color calculations
+                            //cout << color << endl;
+                        } else {
+                            color = background;
+                        }
+                        red += color.r;
+                        green += color.g;
+                        blue += color.b;
+                    }
+                }
+                 // We know where we want the ray to go, so now we just need to know how large each pixel is and split it up
+    //          _________________
+    //          |       |   *   |
+    //          |   *   |       |
+    //          _________________
+    //          |       |    *  |
+    //          |   *   |       |
+    //          _________________
+                int aveSum = sampling.sampleSize * sampling.sampleSize;
+                outputImg.setPixel(i, j, Color(red / aveSum, green / aveSum, blue / aveSum));
+
+
+            } else {
+                //cast 1 ray per pixel in the image plane
+                // (u,v) : coordinate on the image plane for the center of the pixel
+                float u = (halfW - (imgW) * ((i + 0.5) / imgW));
+                float v = (halfH - (imgH) * ((j + 0.5) / imgH));
+                // p : the point u,v in 3D camera coordinates
+                Point3D p = d * forward + u * right + v * up + eye;
+                //cout << p << endl;
+                // rayDir : ray starting at eye and going through the image plane at p
+                Dir3D rayDir = (p - eye);
+                // rayLine : line version of the ray
+                Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
+                //TODO starting here is the loop over all objects?
+
+                Hit myHit = findIntersection(eye, rayLine);
+                Color color;
+                if (myHit.mIntersected) {
+                    color = getLighting(myHit); //Color(std::abs(myHit.mNormal.x), std::abs(myHit.mNormal.y), std::abs(myHit.mNormal.z)); //TODO do color calculations
+                    //cout << color << endl;
+                }
+                else color = background;
+                outputImg.setPixel(i, j, color);
             }
-            else color = background;
-            outputImg.setPixel(i, j, color);
+            
+
+           
+            
         }
     }
     auto t_end = std::chrono::high_resolution_clock::now();
@@ -252,4 +306,10 @@ Color getLighting(Hit intersection) {
     }
     //cout << totalColor << endl;
     return totalColor.getTonemapped();
+}
+
+
+// https://stackoverflow.com/questions/13408990/how-to-generate-random-float-number-in-c
+float randomPixelLocationNoise(float noiseSize) {
+    return (float)rand() / (float)(RAND_MAX / (2 * noiseSize)) - noiseSize;
 }

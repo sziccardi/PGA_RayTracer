@@ -33,3 +33,6 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
 
 //LIGHTING
 Color getLighting(Hit intersection);
+
+// Sampling
+float randomPixelLocationNoise(float noiseSize);

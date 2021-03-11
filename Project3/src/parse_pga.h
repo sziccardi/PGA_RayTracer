@@ -38,6 +38,10 @@ Material currentMaterial = Material(0, 0, 0, 1, 1, 1, 0, 0, 0, 5, 0, 0, 0, 1);
 Color background = Color(0, 0, 0);
 float maxDepth = 5.f;
 
+// Sampling
+Sampling sampling = Sampling(NONE);
+
+
 void resetScene() {
     spheres.clear();
     lights.clear();
@@ -674,6 +678,30 @@ void parseSceneFile(std::string fileName){
                    cout << std::to_string(n) << endl;
 
                    maxDepth = n;
+               }
+
+               command = "sampling_method:";
+               found = line.find(command);
+               if (found != std::string::npos) {
+                    imgName = "";
+                    iter = found + command.length();
+                    std::string subString = line.substr(iter);
+                    int start = subString.find_first_not_of(" \t\r\n");
+                    int end = subString.substr(start).find_first_of(" \t\r\n");
+                    std::string samplingName = subString.substr(start, end);
+
+                    if (strcmp("jittered", samplingName.c_str()) == 0) {
+                        std::string rest = subString.substr(end + 1);
+
+                        int start = rest.find_first_not_of(" \t\r\n");
+                        int end = rest.substr(start).find_first_of(" \t\r\n");
+                        std::string stringS = rest.substr(start);
+                        if (end >= 0) stringS = rest.substr(start, start + end);
+                        int sampleSize = (int) std::stof(stringS);
+
+                        sampling = Sampling(JITTERED, sampleSize);
+                        cout << "Jittered Sampling turned on with : " << std::to_string(sampleSize * sampleSize) << " Samples" << endl;
+                    }
                }
            }
         }

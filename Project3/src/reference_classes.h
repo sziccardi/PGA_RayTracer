@@ -8,6 +8,7 @@
 #include <fstream>
 
 enum LightType { AMBIENT, POINT, DIRECTIONAL, SPOT };
+enum SamplingType { NONE, JITTERED };
 
 // ---------------------------------
 //  Define Primatives
@@ -118,6 +119,17 @@ struct Hit {
 	Hit() {};
 };
 //Various Operator Overloads
+
+
+struct Sampling {
+	SamplingType mType;
+	int sampleSize;
+
+	Sampling(SamplingType type = NONE, int samplingSize = 2) {
+		mType = type;
+		sampleSize = samplingSize;
+	};
+};
 
 
 #endif
