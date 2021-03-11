@@ -53,7 +53,42 @@ int main(int argc, char** argv) {
     outputImg.write(imgName.c_str());
     return 0;
 }
+Hit lineSegmentSphereIntersect_fast(Point3D p1, Point3D p2, Point3D sphereCenter, float sphereRadius) {
+    Line3D rayLine = vee(p1, p2);
+    Dir3D dir = rayLine.dir();
+    float a = dot(dir, dir);
+    Dir3D toStart = (p1 - sphereCenter);
+    float b = 2 * dot(dir, toStart);
+    float c = dot(toStart, toStart) - sphereRadius * sphereRadius;
+    float discr = b * b - 4 * a * c;
+    if (discr < 0) {
+        return Hit();
+    }
+    else {
+        float t0 = (-b + sqrt(discr)) / (2 * a);
+        float t1 = (-b - sqrt(discr)) / (2 * a);
+        float tEnd = (p2 - p1).x / dir.x;
+        // p = p0 + t * v
+        if (t0 > 0 && t1 > 0 && t0 < tEnd && t1 < tEnd) {
+            float val = std::min(t1, t0);
+            Point3D p = p1 + val * dir;
+            Dir3D norm = (p - sphereCenter).normalized();
+            return Hit(p, norm);
+        }
+        else if (t0 > 0 && t1 < 0 && t0 < tEnd) {
+            Point3D p = p1 + t0 * dir;
+            Dir3D norm = (p - sphereCenter).normalized();
+            return Hit(p, norm);
+        }
+        else if (t1 > 0 && t0 < 0 && t1 < tEnd) {
+            Point3D p = p1 + t1 * dir;
+            Dir3D norm = (p - sphereCenter).normalized();
+            return Hit(p, norm);
+        }
 
+    }
+    return Hit();
+}
 
 Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius) {
     Dir3D dir = rayLine.dir();
@@ -75,12 +110,12 @@ Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCent
             Dir3D norm = (p - sphereCenter).normalized();
             return Hit(p, norm);
         }
-        else if (t0 > 0) {
+        else if (t0 > 0 && t1 < 0) {
             Point3D p = rayStart + t0 * dir;
             Dir3D norm = (p - sphereCenter).normalized();
             return Hit(p, norm);
         }
-        else if (t1 > 0) {
+        else if (t1 > 0 && t0 < 0) {
             Point3D p = rayStart + t1 * dir;
             Dir3D norm = (p - sphereCenter).normalized();
             return Hit(p, norm);
@@ -130,6 +165,28 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
     return closestHit;
 }
 
+Hit findIntersection(Point3D p1, Point3D p2) {
+    Hit closestHit = Hit();
+    float currMinDist = 10000000000;
+    int i = 0;
+    for (Sphere s : spheres) {
+        //TODO: add check for max depth
+        Hit tempHit = lineSegmentSphereIntersect_fast(p1, p2, s.mCenter, s.mRadius);
+        if (tempHit.mIntersected) {
+            float tempDist = (tempHit.mPosition - p1).magnitude();
+            if (tempDist < currMinDist) {
+                currMinDist = tempDist;
+                tempHit.mObjectIter = i;
+                tempHit.mMaterial = s.mMaterial;
+                closestHit = tempHit;
+            }
+        }
+        i++;
+    }
+
+    return closestHit;
+}
+
 Color getLighting(Hit intersection) {
     Color totalColor = Color(0, 0, 0);
     for (Light* l : lights) {
@@ -171,15 +228,11 @@ Color getLighting(Hit intersection) {
         else if (l->mType == POINT) {
             PointLight* pl = (PointLight*)(l);
             Dir3D lightDir = pl->mPosition - (intersection.mPosition + intersection.mNormal * 0.5f);
-            Hit lightIntersect = findIntersection(pl->mPosition, vee(intersection.mPosition + intersection.mNormal * 0.025f, pl->mPosition).normalized());
+            Hit lightIntersect = findIntersection(pl->mPosition, intersection.mPosition + intersection.mNormal * 0.5f);
             if (!lightIntersect.mIntersected) {
                 float dist = (pl->mPosition).distToSqr(intersection.mPosition);
                 float coefficient = 1.f / dist;
                 float myDot = dot(intersection.mNormal, -1.f * lightDir.normalized());
-                /*cout << "fall off = " << std::to_string(coefficient) << endl;
-                cout << "material color = " << intersection.mMaterial.mDiffuseColor << endl;
-                cout << "light color = " << pl->mColor << endl;
-                cout << "std::max(0.f, myDot) = " << std::to_string(std::max(0.f, myDot)) << endl;*/
                 totalColor = totalColor + coefficient * intersection.mMaterial.mDiffuseColor * pl->mColor * std::max(0.f, myDot);
 
                 // specular amount = ks * I * max(0 , dot(n, h)) ^ p

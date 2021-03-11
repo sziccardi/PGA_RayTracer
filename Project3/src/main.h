@@ -25,7 +25,9 @@
 
 
 //INTERSECTIONS
-Hit findIntersection(Point3D rayStart, Line3D rayLine); //TODO figure out what this should return
+Hit findIntersection(Point3D rayStart, Line3D rayLine);
+Hit findIntersection(Point3D p1, Point3D p2);
+Hit lineSegmentSphereIntersect_fast(Point3D p1, Point3D p2, Point3D sphereCenter, float sphereRadius);
 Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius);
 Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius);
 
