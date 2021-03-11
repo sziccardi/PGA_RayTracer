@@ -273,6 +273,14 @@ Color getLighting(Hit intersection) {
             if (!lightIntersect.mIntersected) {
                 float deflectionScaling = dot(intersection.mNormal, dl->mDirection.normalized());
                 totalColor = totalColor + intersection.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
+
+                Color ks = intersection.mMaterial.mSpecularColor;
+                Dir3D v = (eye - intersection.mPosition).normalized();
+                Dir3D h = (v + dl->mDirection).normalized();
+                Dir3D n = intersection.mNormal;
+                float p = intersection.mMaterial.mSpecularPower;
+                Color I = dl->mColor;
+                totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);
             }
         }
         else if (l->mType == POINT) {
