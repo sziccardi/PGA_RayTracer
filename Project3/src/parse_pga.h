@@ -78,7 +78,6 @@ void parseSceneFile(std::string fileName){
                    cout << "new sphere = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
-                   cout << "substring = " << subString << endl;
                    int start = subString.find_first_not_of(" \t\r\n");
                    int end = subString.substr(start).find_first_of(" \t\r\n");
                    std::string stringX = subString.substr(start);
@@ -443,7 +442,7 @@ void parseSceneFile(std::string fileName){
                    float b = std::stof(stringB);
                    cout << std::to_string(b) << ") " << endl;
 
-                   cout << "direction = ( ";
+                   cout << "position = ( ";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");

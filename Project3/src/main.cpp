@@ -69,20 +69,23 @@ Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCent
         float t0 = (-b + sqrt(discr)) / (2 * a);
         float t1 = (-b - sqrt(discr)) / (2 * a);
         // p = p0 + t * v
-        if (t0 > 0 || t1 > 0) {
-            Point3D p1 = rayStart + dir * (maxDepth * 100);
-            Point3D p2 = rayStart + dir * (maxDepth * 100);
-            if (t0 > 0) {
-                p1 = rayStart + t0 * dir;
-            }
-            if (t1 > 0) {
-                p2 = rayStart + t1 * dir;
-            }
-            Dir3D norm1 = (p1 - sphereCenter).normalized();
-            Dir3D norm2 = (p2 - sphereCenter).normalized();
-            if (t0 > t1) return Hit(p2, norm2);
-            return Hit(p1, norm1);
+        if (t0 > 0 && t1 > 0) {
+            float val = std::min(t1, t0);
+            Point3D p = rayStart + val * dir;
+            Dir3D norm = (p - sphereCenter).normalized();
+            return Hit(p, norm);
         }
+        else if (t0 > 0) {
+            Point3D p = rayStart + t0 * dir;
+            Dir3D norm = (p - sphereCenter).normalized();
+            return Hit(p, norm);
+        }
+        else if (t1 > 0) {
+            Point3D p = rayStart + t1 * dir;
+            Dir3D norm = (p - sphereCenter).normalized();
+            return Hit(p, norm);
+        }
+        
     }
     return Hit();
 }
@@ -133,7 +136,7 @@ Color getLighting(Hit intersection) {
         //cout << "light type = " << std::to_string(l->mType) << endl;
         if (l->mType == AMBIENT) {
             Color myMult = l->mColor * intersection.mMaterial.mAmbientColor;
-            totalColor = totalColor + myMult;
+            totalColor = totalColor + myMult; 
         } else if (l->mType == SPOT) {
             SpotLight* sl = (SpotLight*)(l); 
             Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.5f), vee(sl->mPosition, (intersection.mPosition + intersection.mNormal * 0.5f)).normalized());
@@ -159,7 +162,7 @@ Color getLighting(Hit intersection) {
         }
         else if (l->mType == DIRECTIONAL) {
             DirectionalLight* dl = (DirectionalLight*)(l);
-            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.5f), vee(intersection.mPosition, intersection.mPosition + dl->mDirection).normalized());
+            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.5f + dl->mDirection * 100000.f), vee(intersection.mPosition, intersection.mPosition + dl->mDirection).normalized());
             if (!lightIntersect.mIntersected) {
                 float myDot = dot(intersection.mNormal, dl->mDirection.normalized());
                 totalColor = totalColor + intersection.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, myDot);
@@ -168,10 +171,15 @@ Color getLighting(Hit intersection) {
         else if (l->mType == POINT) {
             PointLight* pl = (PointLight*)(l);
             Dir3D lightDir = pl->mPosition - (intersection.mPosition + intersection.mNormal * 0.5f);
-            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.5f), vee(pl->mPosition, intersection.mPosition).normalized());
+            Hit lightIntersect = findIntersection(pl->mPosition, vee(intersection.mPosition + intersection.mNormal * 0.025f, pl->mPosition).normalized());
             if (!lightIntersect.mIntersected) {
-                float coefficient = 1.f / lightDir.magnitudeSqr();
-                float myDot = dot(intersection.mNormal, lightDir.normalized());
+                float dist = (pl->mPosition).distToSqr(intersection.mPosition);
+                float coefficient = 1.f / dist;
+                float myDot = dot(intersection.mNormal, -1.f * lightDir.normalized());
+                /*cout << "fall off = " << std::to_string(coefficient) << endl;
+                cout << "material color = " << intersection.mMaterial.mDiffuseColor << endl;
+                cout << "light color = " << pl->mColor << endl;
+                cout << "std::max(0.f, myDot) = " << std::to_string(std::max(0.f, myDot)) << endl;*/
                 totalColor = totalColor + coefficient * intersection.mMaterial.mDiffuseColor * pl->mColor * std::max(0.f, myDot);
 
                 // specular amount = ks * I * max(0 , dot(n, h)) ^ p
@@ -184,7 +192,7 @@ Color getLighting(Hit intersection) {
                 // I: light color
                 Color ks = intersection.mMaterial.mSpecularColor;
                 Dir3D v = (eye - intersection.mPosition).normalized();
-                Dir3D h = (v - lightDir.normalized()).normalized();
+                Dir3D h = (v + lightDir.normalized()).normalized();
                 Dir3D n = intersection.mNormal;
                 float p = intersection.mMaterial.mSpecularPower;
                 Color I = pl->mColor;
