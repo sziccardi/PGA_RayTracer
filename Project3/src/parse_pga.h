@@ -26,9 +26,9 @@ std::string imgName = "raytraced.bmp";
 
 //Camera Parmaters
 Point3D eye = Point3D(0,0,0); 
-Dir3D forward = Dir3D(0,0,1).normalized();
+Dir3D forward = Dir3D(0,0,-1).normalized();
 Dir3D up = Dir3D(0,1,0).normalized();
-Dir3D right = Dir3D(-1,0,0).normalized();
+Dir3D right = Dir3D(1,0,0).normalized();
 float halfAngleVFOV = 45; 
 
 //Scene (Sphere) Parmaters
@@ -681,6 +681,7 @@ void parseSceneFile(std::string fileName){
     } else cout << "Unable to open file";
 
     printf("found %d lights\n", lights.size());
+    printf("found %d spheres\n", spheres.size());
   printf("Orthagonal Camera Basis:\n");
   right = cross(up, forward);
   
@@ -690,7 +691,7 @@ void parseSceneFile(std::string fileName){
   Dir3D u3 = right - dot(u1, right) / u1.magnitudeSqr() * u1 - dot(u2, right) / u2.magnitudeSqr() * u2;
 
   up = u1.normalized();
-  forward = u2.normalized();
+  forward = -1.f * u2.normalized();
   right = u3.normalized();
 
   forward.print("forward");

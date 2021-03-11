@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
         for (int j = 0 / 2; j < img_height; j++) {
             //cast 1 ray per pixel in the image plane
             // (u,v) : coordinate on the image plane for the center of the pixel
-            float u = ((imgW) * ((i + 0.5) / imgW) - halfW);
+            float u = (halfW - (imgW) * ((i + 0.5) / imgW));
             float v = (halfH - (imgH) * ((j + 0.5) / imgH));
             // p : the point u,v in 3D camera coordinates
             Point3D p = d * forward + u * right + v * up + eye;
@@ -247,10 +247,9 @@ Color getLighting(Hit intersection) {
                 Color I = pl->mColor;
                 totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(n, h)), p);
             }
-            //else cout << "INTERSECTED" << endl;
         }
         
     }
-
+    //cout << totalColor << endl;
     return totalColor.getTonemapped();
 }
