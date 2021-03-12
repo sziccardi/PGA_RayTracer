@@ -45,7 +45,6 @@ int main(int argc, char** argv) {
                         Dir3D rayDir = (p - eye);
                         // rayLine : line version of the ray
                         Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
-                        //TODO starting here is the loop over all objects?
 
                         Hit myHit = findIntersection(eye, rayLine);
                         Color color;
@@ -84,7 +83,6 @@ int main(int argc, char** argv) {
                 Dir3D rayDir = (p - eye);
                 // rayLine : line version of the ray
                 Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
-                //TODO starting here is the loop over all objects?
 
                 Hit myHit = findIntersection(eye, rayLine);
                 Color color;
@@ -199,7 +197,7 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
 
 Hit findIntersection(Point3D rayStart, Line3D rayLine) {
     Hit closestHit = Hit();
-    float currMinDist = 10000000000;
+    float currMinDist = maxDepth;
     int i = 0;
     for (Sphere s : spheres) {
         //TODO: add check for max depth
@@ -221,7 +219,7 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
 
 Hit findIntersection(Point3D p1, Point3D p2) {
     Hit closestHit = Hit();
-    float currMinDist = 10000000000;
+    float currMinDist = maxDepth;
     int i = 0;
     for (Sphere s : spheres) {
         //TODO: add check for max depth
