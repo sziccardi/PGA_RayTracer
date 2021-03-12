@@ -20,6 +20,12 @@ int main(int argc, char** argv) {
     float halfW = imgW / 2, halfH = imgH / 2;
     float d = halfH / tanf(halfAngleVFOV * (M_PI / 180.0f));
 
+    Node* rootNode = new Node();
+    Hit rootHit = Hit(eye, Dir3D(), Material());
+    rootHit.mIntersected = false;
+    rootNode->mValue = rootHit;
+    mRayTree = new RayTree(rootNode);
+
     Image outputImg = Image(img_width, img_height);
     auto t_start = std::chrono::high_resolution_clock::now();
     for (int i = 0 / 2; i < img_width; i++) {
@@ -39,7 +45,10 @@ int main(int argc, char** argv) {
             Hit myHit = findIntersection(eye, rayLine);
             Color color;
             if (myHit.mIntersected) {
-                color = getLighting(myHit);
+                //TODO: make this recursive
+                //cout << "( " << std::to_string(i) << ", " << std::to_string(j) << " )" << endl;
+                color = getLighting(myHit, 0);
+
             }
             else color = background;
             outputImg.setPixel(i, j, color);
@@ -185,57 +194,58 @@ Hit findIntersection(Point3D p1, Point3D p2) {
     return closestHit;
 }
 
-Color getLighting(Hit intersection) {
+Color getLighting(Node* parentNode, int currentLevel) {    
+    //cout << currentLevel << endl;
     Color totalColor = Color(0, 0, 0);
     for (Light* l : lights) {
         //cout << "light type = " << std::to_string(l->mType) << endl;
         if (l->mType == AMBIENT) {
-            Color myMult = l->mColor * intersection.mMaterial.mAmbientColor;
+            Color myMult = l->mColor * parentNode->mValue.mMaterial.mAmbientColor;
             totalColor = totalColor + myMult; 
         } else if (l->mType == SPOT) {
             SpotLight* sl = (SpotLight*)(l); 
-            Hit lightIntersect = findIntersection(sl->mPosition, (intersection.mPosition + intersection.mNormal * 0.05f));
+            Hit lightIntersect = findIntersection(sl->mPosition, (parentNode->mValue.mPosition + parentNode->mValue.mNormal * 0.05f));
             if (!lightIntersect.mIntersected) {
-                Dir3D lightToSphere = (intersection.mPosition) - sl->mPosition;
+                Dir3D lightToSphere = (parentNode->mValue.mPosition) - sl->mPosition;
                 float angleToLight = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
-                float deflectionScaling = dot(intersection.mNormal, -1.f * sl->mDirection.normalized());
+                float deflectionScaling = dot(parentNode->mValue.mNormal, -1.f * sl->mDirection.normalized());
                 if (angleToLight <= sl->mMinAngle) {
-                    totalColor = totalColor + intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+                    totalColor = totalColor + parentNode->mValue.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
                 }
                 else if (angleToLight > sl->mMinAngle && angleToLight < sl->mMaxAngle) {
                     float range = (sl->mMaxAngle - sl->mMinAngle);
                     float diff = angleToLight - sl->mMinAngle;
                     float intensity = 1 - diff / range;
-                    totalColor = totalColor + intensity * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+                    totalColor = totalColor + intensity * parentNode->mValue.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
                 }
             }
             else totalColor = Color(1, 0, 0);
         }
         else if (l->mType == DIRECTIONAL) {
             DirectionalLight* dl = (DirectionalLight*)(l);
-            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.5f + dl->mDirection * 100000.f), vee(intersection.mPosition, intersection.mPosition + dl->mDirection).normalized());
+            Hit lightIntersect = findIntersection((parentNode->mValue.mPosition + parentNode->mValue.mNormal * 0.5f + dl->mDirection * 100000.f), vee(parentNode->mValue.mPosition, parentNode->mValue.mPosition + dl->mDirection).normalized());
             if (!lightIntersect.mIntersected) {
-                float deflectionScaling = dot(intersection.mNormal, dl->mDirection.normalized());
-                totalColor = totalColor + intersection.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
+                float deflectionScaling = dot(parentNode->mValue.mNormal, dl->mDirection.normalized());
+                totalColor = totalColor + parentNode->mValue.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
 
-                Color ks = intersection.mMaterial.mSpecularColor;
-                Dir3D v = (eye - intersection.mPosition).normalized();
+                Color ks = parentNode->mValue.mMaterial.mSpecularColor;
+                Dir3D v = (eye - parentNode->mValue.mPosition).normalized();
                 Dir3D h = (v + dl->mDirection).normalized();
-                Dir3D n = intersection.mNormal;
-                float p = intersection.mMaterial.mSpecularPower;
+                Dir3D n = parentNode->mValue.mNormal;
+                float p = parentNode->mValue.mMaterial.mSpecularPower;
                 Color I = dl->mColor;
                 totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);
             }
         }
         else if (l->mType == POINT) {
             PointLight* pl = (PointLight*)(l);
-            Dir3D lightDir = pl->mPosition - (intersection.mPosition + intersection.mNormal * 0.0f);
-            Hit lightIntersect = findIntersection(intersection.mPosition + intersection.mNormal * 0.05f, pl->mPosition);
+            Dir3D lightDir = pl->mPosition - (parentNode->mValue.mPosition + parentNode->mValue.mNormal * 0.0f);
+            Hit lightIntersect = findIntersection(parentNode->mValue.mPosition + parentNode->mValue.mNormal * 0.05f, pl->mPosition);
             if (!lightIntersect.mIntersected) {
-                float dist = (pl->mPosition).distToSqr(intersection.mPosition);
+                float dist = (pl->mPosition).distToSqr(parentNode->mValue.mPosition);
                 float coefficient = 1.f / dist;
-                float myDot = dot(intersection.mNormal, lightDir.normalized());
-                totalColor = totalColor + coefficient * intersection.mMaterial.mDiffuseColor * pl->mColor * std::max(0.f, myDot);
+                float myDot = dot(parentNode->mValue.mNormal, lightDir.normalized());
+                totalColor = totalColor + coefficient * parentNode->mValue.mMaterial.mDiffuseColor * pl->mColor * std::max(0.f, myDot);
 
                 // specular amount = ks * I * max(0 , dot(n, h)) ^ p
                 // ks: specular color
@@ -245,17 +255,35 @@ Color getLighting(Hit intersection) {
                 // n: surface normal
                 // p: specular coefficient
                 // I: light color
-                Color ks = intersection.mMaterial.mSpecularColor;
-                Dir3D v = (eye - intersection.mPosition).normalized();
+                Color ks = parentNode->mValue.mMaterial.mSpecularColor;
+                Dir3D v = (eye - parentNode->mValue.mPosition).normalized();
                 Dir3D h = (v + lightDir.normalized()).normalized();
-                Dir3D n = intersection.mNormal;
-                float p = intersection.mMaterial.mSpecularPower;
+                Dir3D n = parentNode->mValue.mNormal;
+                float p = parentNode->mValue.mMaterial.mSpecularPower;
                 Color I = pl->mColor;
                 totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(n, h)), p);
             }
         }
         
     }
-    //cout << totalColor << endl;
+    if (mRecursiveDepth > 0 && currentLevel < mRecursiveDepth - 1) {
+        Dir3D v = (parentNode->mValue.mPosition - eye);
+        Dir3D rayDir = 2 * dot(parentNode->mValue.mNormal, v) * parentNode->mValue.mNormal - v;
+
+        Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
+
+        Hit myHit = findIntersection(eye, rayLine);
+        if (myHit.mIntersected) {
+            int i = currentLevel;
+
+            Node* reflected = new Node();
+            reflected->mType = 1;
+            reflected->mValue = myHit;
+            parentNode->mColor = getLighting(reflected, i + 1);
+            mRayTree->addChild(parentNode, reflected);
+            
+            //totalColor = totalColor + getLighting(myHit, i + 1);
+        }
+    }
     return totalColor.getTonemapped();
 }

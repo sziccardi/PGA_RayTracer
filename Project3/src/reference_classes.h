@@ -119,5 +119,85 @@ struct Hit {
 };
 //Various Operator Overloads
 
+struct Node {
+	int mType; // 0: transmissive 1: reflective -1: none
+	Hit mValue;
+	Color mColor;
+	Node* mTransmission;
+	Node* mReflection;
+};
+
+struct RayTree
+{
+	RayTree() {
+		mRoot = nullptr;
+	}
+
+	RayTree(Node* root) {
+		mRoot = root;
+	}
+
+	RayTree(Hit rootVal, Color color) {
+		mRoot = new Node();
+		mRoot->mValue = rootVal;
+	}
+
+	~RayTree() {
+		destroy_tree(mRoot);
+	}
+
+	/*Node* search(Hit toFind, Node* newRoot)
+	{
+		if (newRoot != NULL)
+		{
+			if (toFind == newRoot->mValue)
+				return newRoot;
+			if (toFind < newRoot->mValue)
+				return search(toFind, newRoot->mTransmission);
+			else
+				return search(toFind, newRoot->mReflection);
+		}
+		else return NULL;
+	}*/
+
+	void addChild(Node* myParent, Node* reflective) {
+		if (myParent->mReflection) {
+			auto r = myParent->mReflection;
+			delete r;
+		}
+
+		myParent->mReflection = reflective;
+		myParent->mReflection->mType = 1;
+	}
+
+	void addChild(Node* myParent, Hit newTransmissive, Hit newReflective) {
+		if (myParent->mTransmission) {
+			auto t = myParent->mTransmission;
+			delete t;
+		}
+
+		if (myParent->mReflection) {
+			auto r = myParent->mReflection;
+			delete r;
+		}
+		myParent->mTransmission = new Node();
+		myParent->mTransmission->mValue = newTransmissive;
+		myParent->mTransmission->mType = 0;
+		myParent->mReflection = new Node();
+		myParent->mReflection->mValue = newReflective;
+		myParent->mReflection->mType = 1;
+	};
+
+	void destroy_tree(Node* leaf) {
+		if (leaf != NULL) {
+			destroy_tree(leaf->mTransmission);
+			destroy_tree(leaf->mReflection);
+			delete leaf;
+		}
+	}
+		
+
+	Node* mRoot;
+};
 
 #endif

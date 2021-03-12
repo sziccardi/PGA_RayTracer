@@ -32,4 +32,6 @@ Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCent
 Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius);
 
 //LIGHTING
-Color getLighting(Hit intersection);
+RayTree* mRayTree = nullptr;
+int mRecursiveDepth = 2;
+Color getLighting(Node* parentNode, int currentLevel);
