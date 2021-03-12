@@ -197,7 +197,7 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
 
 Hit findIntersection(Point3D rayStart, Line3D rayLine) {
     Hit closestHit = Hit();
-    float currMinDist = maxDepth;
+    float currMinDist = 10000000000;
     int i = 0;
     for (Sphere s : spheres) {
         //TODO: add check for max depth
@@ -219,7 +219,7 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
 
 Hit findIntersection(Point3D p1, Point3D p2) {
     Hit closestHit = Hit();
-    float currMinDist = maxDepth;
+    float currMinDist = 10000000000;
     int i = 0;
     for (Sphere s : spheres) {
         //TODO: add check for max depth
