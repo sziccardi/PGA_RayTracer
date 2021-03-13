@@ -45,7 +45,6 @@ int main(int argc, char** argv) {
                         Dir3D rayDir = (p - eye);
                         // rayLine : line version of the ray
                         Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
-                        //TODO starting here is the loop over all objects?
 
                         Hit myHit = findIntersection(eye, rayLine);
                         Color color;
@@ -83,7 +82,6 @@ int main(int argc, char** argv) {
                 Dir3D rayDir = (p - eye);
                 // rayLine : line version of the ray
                 Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
-                //TODO starting here is the loop over all objects?
 
                 Hit myHit = findIntersection(eye, rayLine);
                 Color color;
