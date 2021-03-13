@@ -714,12 +714,12 @@ void parseSceneFile(std::string fileName){
   right = cross(up, forward);
   
   //v1 = up, v2 = forward, v3 = right
-  Dir3D u1 = up;
-  Dir3D u2 = forward - dot(u1, forward) / u1.magnitudeSqr() * u1;
+  Dir3D u1 = forward;
+  Dir3D u2 = up - dot(u1, up) / u1.magnitudeSqr() * u1;
   Dir3D u3 = right - dot(u1, right) / u1.magnitudeSqr() * u1 - dot(u2, right) / u2.magnitudeSqr() * u2;
 
-  up = u1.normalized();
-  forward = -1.f * u2.normalized();
+  up = u2.normalized();
+  forward = -1.f * u1.normalized();
   right = u3.normalized();
 
   forward.print("forward");
