@@ -71,7 +71,6 @@ int main(int argc, char** argv) {
                 int aveSum = sampling.sampleSize * sampling.sampleSize;
                 outputImg.setPixel(i, j, Color(red / aveSum, green / aveSum, blue / aveSum));
 
-
             } else {
                 //cast 1 ray per pixel in the image plane
                 // (u,v) : coordinate on the image plane for the center of the pixel
@@ -103,7 +102,6 @@ int main(int argc, char** argv) {
     }
     auto t_end = std::chrono::high_resolution_clock::now();
     printf("Rendering took %.2f ms\n", std::chrono::duration<double, std::milli>(t_end - t_start).count());
-
     outputImg.write(imgName.c_str());
     return 0;
 }
@@ -250,7 +248,7 @@ Color getLighting(Hit intersection) {
             totalColor = totalColor + myMult; 
         } else if (l->mType == SPOT) {
             SpotLight* sl = (SpotLight*)(l); 
-            Hit lightIntersect = findIntersection(sl->mPosition, (intersection.mPosition + intersection.mNormal * 0.05f));
+            Hit lightIntersect = findIntersection(sl->mPosition, (intersection.mPosition + intersection.mNormal * 0.0f));
             if (!lightIntersect.mIntersected) {
                 Dir3D lightToSphere = (intersection.mPosition) - sl->mPosition;
                 float angleToLight = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
@@ -265,11 +263,10 @@ Color getLighting(Hit intersection) {
                     totalColor = totalColor + intensity * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
                 }
             }
-            else totalColor = Color(1, 0, 0);
         }
         else if (l->mType == DIRECTIONAL) {
             DirectionalLight* dl = (DirectionalLight*)(l);
-            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.5f + dl->mDirection * 100000.f), vee(intersection.mPosition, intersection.mPosition + dl->mDirection).normalized());
+            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.f), vee(intersection.mPosition - dl->mDirection, intersection.mPosition + intersection.mNormal * 0.f).normalized());
             if (!lightIntersect.mIntersected) {
                 float deflectionScaling = dot(intersection.mNormal, dl->mDirection.normalized());
                 totalColor = totalColor + intersection.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
@@ -286,7 +283,7 @@ Color getLighting(Hit intersection) {
         else if (l->mType == POINT) {
             PointLight* pl = (PointLight*)(l);
             Dir3D lightDir = pl->mPosition - (intersection.mPosition + intersection.mNormal * 0.0f);
-            Hit lightIntersect = findIntersection(intersection.mPosition + intersection.mNormal * 0.05f, pl->mPosition);
+            Hit lightIntersect = findIntersection(intersection.mPosition + intersection.mNormal * 0.0f, pl->mPosition);
             if (!lightIntersect.mIntersected) {
                 float dist = (pl->mPosition).distToSqr(intersection.mPosition);
                 float coefficient = 1.f / dist;
@@ -307,7 +304,10 @@ Color getLighting(Hit intersection) {
                 Dir3D n = intersection.mNormal;
                 float p = intersection.mMaterial.mSpecularPower;
                 Color I = pl->mColor;
-                totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(n, h)), p);
+                Color specToAdd = ks * I * std::pow(std::max(0.f, dot(n, h)), p);
+                //if (specToAdd.r > 0 && specToAdd.g > 0 && specToAdd.b > 0 ) cout << specToAdd << endl;
+                totalColor = totalColor + specToAdd;
+                
             }
         }
         
