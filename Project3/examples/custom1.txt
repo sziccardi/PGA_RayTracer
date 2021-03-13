@@ -1,0 +1,8 @@
+#This is a sphere lit by a point light on a white background.
+material: 1 1 1 1 1 1 0 0 0 0 0 0 0 1
+sphere: 0 0 2 1
+point_light: 10 0 0 -3 0 1 
+point_light: 0 10 0 3 0 1
+output_image: custom1.png
+background: 1 1 1
+#sampling_method: jittered 5

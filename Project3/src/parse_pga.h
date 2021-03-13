@@ -683,7 +683,6 @@ void parseSceneFile(std::string fileName){
                command = "sampling_method:";
                found = line.find(command);
                if (found != std::string::npos) {
-                    imgName = "";
                     iter = found + command.length();
                     std::string subString = line.substr(iter);
                     int start = subString.find_first_not_of(" \t\r\n");

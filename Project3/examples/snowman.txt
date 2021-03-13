@@ -1,0 +1,51 @@
+#camera
+camera_pos: 0 1 -3
+#camera_pos: -5 1 0
+#camera_fwd: -1 0 -0.75
+camera_fov_ha: 26
+output_image: snowman.png
+
+#ground
+material: .79 .79 .79 .59 .79 .79 .3 .3 .3 32 .2 .2 .2 1.5
+sphere: 0 -50.5 0 50
+
+#SNOWMAN
+#body
+material: 1 1 1 1 1 1 0 0 0 5 0 0 0 1
+sphere: 0 2.25 2 0.5
+sphere: 0 0 2 1
+sphere: 0 1.25 2 0.75
+
+#snowflakes
+material: 1 1 1 1 1 1 0 0 0 15 0 0 0 1
+sphere: -1 2.35 3 0.1
+sphere: -1 0.5 3 0.1
+sphere: -2 2 3 0.1
+sphere: -5 1 5 0.1
+sphere: -3 2.35 4 0.1
+sphere: -3 0.75 8 0.1
+sphere: -5 0.5 8 0.1
+sphere: -5 4.5 8 0.1
+sphere: 1 2.35 3 0.1
+sphere: 1 0.75 3 0.1
+sphere: 2 2.5 3 0.1
+sphere: 5 1 5 0.1
+sphere: 3 4.35 4 0.1
+sphere: 3 3.75 8 0.1
+sphere: 5 5.5 8 0.1
+sphere: 5 2.5 8 0.1
+
+#eyes
+material: 0 0 0 0 0 0 0 0 0 1 0 0 0 1
+sphere: -0.15 2.35 1.60 0.1
+sphere: 0.15 2.35 1.60 0.1
+
+#carrot nose
+material: 1 0.5 0.05 1 0.5 0.05 0 0 0 0 0 0 0 1
+sphere: 0 2.15 1.60 0.11
+
+#lights
+directional_light: 0 5 0 -1 10 10 
+directional_light: 0 0 5 1 10 10 
+ambient_light: 0.75 0.75 0.75
+background: .5 .5 1
