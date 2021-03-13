@@ -1,6 +1,0 @@
-#This is a sphere lit by a point light on a white background.
-material: 0 1 1 0 1 1 0 0 0 5 0 0 0 1
-sphere: 0 0 -2 1
-point_light: 10 10 10 0 5 0 
-ambient_light: 0.2 0.2 0.2
-background: .5 .5 .5
