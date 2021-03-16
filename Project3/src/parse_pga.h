@@ -38,6 +38,10 @@ Material currentMaterial = Material(0, 0, 0, 1, 1, 1, 0, 0, 0, 5, 0, 0, 0, 1);
 Color background = Color(0, 0, 0);
 float maxDepth = 5.f;
 
+// Sampling
+Sampling sampling = Sampling(NONE);
+
+
 void resetScene() {
     spheres.clear();
     lights.clear();
@@ -675,6 +679,29 @@ void parseSceneFile(std::string fileName){
 
                    maxDepth = n;
                }
+
+               command = "sampling_method:";
+               found = line.find(command);
+               if (found != std::string::npos) {
+                    iter = found + command.length();
+                    std::string subString = line.substr(iter);
+                    int start = subString.find_first_not_of(" \t\r\n");
+                    int end = subString.substr(start).find_first_of(" \t\r\n");
+                    std::string samplingName = subString.substr(start, end);
+
+                    if (strcmp("jittered", samplingName.c_str()) == 0) {
+                        std::string rest = subString.substr(end + 1);
+
+                        int start = rest.find_first_not_of(" \t\r\n");
+                        int end = rest.substr(start).find_first_of(" \t\r\n");
+                        std::string stringS = rest.substr(start);
+                        if (end >= 0) stringS = rest.substr(start, start + end);
+                        int sampleSize = (int) std::stof(stringS);
+
+                        sampling = Sampling(JITTERED, sampleSize);
+                        cout << "Jittered Sampling turned on with : " << std::to_string(sampleSize * sampleSize) << " Samples" << endl;
+                    }
+               }
            }
         }
         myFile.close();
@@ -686,12 +713,12 @@ void parseSceneFile(std::string fileName){
   right = cross(up, forward);
   
   //v1 = up, v2 = forward, v3 = right
-  Dir3D u1 = up;
-  Dir3D u2 = forward - dot(u1, forward) / u1.magnitudeSqr() * u1;
+  Dir3D u1 = forward;
+  Dir3D u2 = up - dot(u1, up) / u1.magnitudeSqr() * u1;
   Dir3D u3 = right - dot(u1, right) / u1.magnitudeSqr() * u1 - dot(u2, right) / u2.magnitudeSqr() * u2;
 
-  up = u1.normalized();
-  forward = -1.f * u2.normalized();
+  up = u2.normalized();
+  forward = -1.f * u1.normalized();
   right = u3.normalized();
 
   forward.print("forward");

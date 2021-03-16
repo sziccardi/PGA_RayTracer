@@ -203,6 +203,28 @@ struct MultiVector{
     printf("MutiVector:%s %s\n",title, std::string(*this).c_str());
   }
 
+  bool operator==(MultiVector other) {
+
+      if (s == other.s &&
+          w == other.w &&
+          x == other.x &&
+          y == other.y &&
+          z == other.z &&
+          wx == other.wx &&
+          wy == other.wy &&
+          wz == other.wz &&
+          xy == other.xy &&
+          zx == other.zx &&
+          yz == other.yz &&
+          wyx == other.wyx &&
+          wxz == other.wxz &&
+          wzy == other.wzy &&
+          xyz == other.xyz &&
+          wxyz == other.wxyz
+          ) return true;
+      return false;
+  }
+
 };
 
 std::ostream& operator<<(std::ostream& os, const MultiVector& mv){

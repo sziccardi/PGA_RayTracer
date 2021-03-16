@@ -8,6 +8,7 @@
 #include <fstream>
 
 enum LightType { AMBIENT, POINT, DIRECTIONAL, SPOT };
+enum SamplingType { NONE, JITTERED };
 
 // ---------------------------------
 //  Define Primatives
@@ -43,6 +44,18 @@ struct Material {
 		mTransmissiveColor = Color(0,0,0);
 		mSpecularPower = 5;
 		mRefractionIndex = 1;
+	}
+
+	bool operator==(Material other) {
+		if (
+			mAmbientColor == other.mAmbientColor &&
+			mDiffuseColor == other.mDiffuseColor &&
+			mSpecularColor == other.mSpecularColor &&
+			mTransmissiveColor == other.mTransmissiveColor &&
+			mSpecularPower == other.mSpecularPower &&
+			mRefractionIndex == other.mRefractionIndex
+			) return true;
+		return false;
 	}
 };
 
@@ -116,88 +129,137 @@ struct Hit {
 		mIntersected = true;
 	}
 	Hit() {};
+
+	bool operator==(Hit toCompare) {
+		if (mIntersected == toCompare.mIntersected &&
+			mNormal == toCompare.mNormal &&
+			mMaterial == toCompare.mMaterial &&
+			mObjectIter == toCompare.mObjectIter
+			) return true;
+		return false;
+	}
 };
 //Various Operator Overloads
 
 struct Node {
+	int mIndex;
 	int mType; // 0: transmissive 1: reflective -1: none
 	Hit mValue;
 	Color mColor;
 	Node* mTransmission;
 	Node* mReflection;
 };
+//
+//struct RayTree
+//{
+//	int mNumNodes;
+//	RayTree() {
+//		mRoot = nullptr;
+//		mNumNodes = 0;
+//	}
+//
+//	RayTree(Node* root) {
+//		root->mIndex = 0;
+//		mRoot = root;
+//		mNumNodes = 1;
+//	}
+//
+//	RayTree(Hit rootVal) {
+//		mRoot = new Node();
+//		mRoot->mIndex = 0;
+//		mRoot->mValue = rootVal;
+//		mNumNodes = 1;
+//	}
+//
+//	~RayTree() {
+//		destroy_tree(mRoot);
+//	}
+//
+//	Node* searchUtil(Hit toFind, Node* newRoot, bool visited[])
+//	{
+//		if (newRoot != NULL)
+//		{
+//			if (toFind == newRoot->mValue)
+//				return newRoot;
+//			else {
+//				if (!visited[newRoot->mReflection->mIndex]) {
+//					visited[newRoot->mIndex] = true;
+//					searchUtil(toFind, newRoot->mReflection, visited);
+//				}
+//				else if (!visited[newRoot->mTransmission->mIndex]) {
+//					visited[newRoot->mIndex] = true;
+//					searchUtil(toFind, newRoot->mTransmission, visited);
+//				}
+//			}
+//		}
+//		else return NULL;
+//	}
+//
+//	Node* search(Hit toFind) {
+//		bool* visited = new bool[mNumNodes];
+//		for (int i = 0; i < mNumNodes; i++)
+//			visited[i] = false;
+//
+//		Node* res = searchUtil(toFind, mRoot, visited);
+//		delete(visited);
+//		return res;
+//	}
+//
+//	void addChild(Node* myParent, Node* reflective) {
+//		if (myParent->mReflection) {
+//			auto r = myParent->mReflection;
+//			delete r;
+//		}
+//
+//		myParent->mReflection = reflective;
+//		myParent->mReflection->mType = 1;
+//		mNumNodes++;
+//		reflective->mIndex = mNumNodes;
+//	}
+//
+//	void addChild(Node* myParent, Hit newTransmissive, Hit newReflective) {
+//		if (myParent->mTransmission) {
+//			auto t = myParent->mTransmission;
+//			delete t;
+//		}
+//
+//		if (myParent->mReflection) {
+//			auto r = myParent->mReflection;
+//			delete r;
+//		}
+//		myParent->mTransmission = new Node();
+//		myParent->mTransmission->mValue = newTransmissive;
+//		myParent->mTransmission->mType = 0;
+//		mNumNodes++;
+//		myParent->mTransmission->mIndex = mNumNodes;
+//		myParent->mReflection = new Node();
+//		myParent->mReflection->mValue = newReflective;
+//		myParent->mReflection->mType = 1;
+//		mNumNodes++;
+//		myParent->mReflection->mIndex = mNumNodes;
+//	};
+//
+//	void destroy_tree(Node* leaf) {
+//		if (leaf != NULL) {
+//			destroy_tree(leaf->mTransmission);
+//			destroy_tree(leaf->mReflection);
+//			delete leaf;
+//		}
+//	}
+//		
+//
+//	Node* mRoot;
+//};
 
-struct RayTree
-{
-	RayTree() {
-		mRoot = nullptr;
+struct Sampling {
+	SamplingType mType;
+	int sampleSize;
+
+	Sampling(SamplingType type = NONE, int samplingSize = 2) {
+		mType = type;
+		sampleSize = samplingSize;
 	}
-
-	RayTree(Node* root) {
-		mRoot = root;
-	}
-
-	RayTree(Hit rootVal, Color color) {
-		mRoot = new Node();
-		mRoot->mValue = rootVal;
-	}
-
-	~RayTree() {
-		destroy_tree(mRoot);
-	}
-
-	/*Node* search(Hit toFind, Node* newRoot)
-	{
-		if (newRoot != NULL)
-		{
-			if (toFind == newRoot->mValue)
-				return newRoot;
-			if (toFind < newRoot->mValue)
-				return search(toFind, newRoot->mTransmission);
-			else
-				return search(toFind, newRoot->mReflection);
-		}
-		else return NULL;
-	}*/
-
-	void addChild(Node* myParent, Node* reflective) {
-		if (myParent->mReflection) {
-			auto r = myParent->mReflection;
-			delete r;
-		}
-
-		myParent->mReflection = reflective;
-		myParent->mReflection->mType = 1;
-	}
-
-	void addChild(Node* myParent, Hit newTransmissive, Hit newReflective) {
-		if (myParent->mTransmission) {
-			auto t = myParent->mTransmission;
-			delete t;
-		}
-
-		if (myParent->mReflection) {
-			auto r = myParent->mReflection;
-			delete r;
-		}
-		myParent->mTransmission = new Node();
-		myParent->mTransmission->mValue = newTransmissive;
-		myParent->mTransmission->mType = 0;
-		myParent->mReflection = new Node();
-		myParent->mReflection->mValue = newReflective;
-		myParent->mReflection->mType = 1;
-	};
-
-	void destroy_tree(Node* leaf) {
-		if (leaf != NULL) {
-			destroy_tree(leaf->mTransmission);
-			destroy_tree(leaf->mReflection);
-			delete leaf;
-		}
-	}
-		
-
-	Node* mRoot;
 };
+
 
 #endif

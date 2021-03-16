@@ -20,38 +20,64 @@ int main(int argc, char** argv) {
     float halfW = imgW / 2, halfH = imgH / 2;
     float d = halfH / tanf(halfAngleVFOV * (M_PI / 180.0f));
 
-    Node* rootNode = new Node();
-    Hit rootHit = Hit(eye, Dir3D(), Material());
-    rootHit.mIntersected = false;
-    rootNode->mValue = rootHit;
-    mRayTree = new RayTree(rootNode);
-
     Image outputImg = Image(img_width, img_height);
     auto t_start = std::chrono::high_resolution_clock::now();
+
     for (int i = 0 / 2; i < img_width; i++) {
         for (int j = 0 / 2; j < img_height; j++) {
-            //cast 1 ray per pixel in the image plane
-            // (u,v) : coordinate on the image plane for the center of the pixel
-            float u = (halfW - (imgW) * ((i + 0.5) / imgW));
-            float v = (halfH - (imgH) * ((j + 0.5) / imgH));
-            // p : the point u,v in 3D camera coordinates
-            Point3D p = d * forward + u * right + v * up + eye;
-            
-            // rayDir : ray starting at eye and going through the image plane at p
-            Dir3D rayDir = (p - eye);
-            // rayLine : line version of the ray
-            Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
+            if (sampling.mType == JITTERED) {
 
-            Hit myHit = findIntersection(eye, rayLine);
-            Color color;
-            if (myHit.mIntersected) {
-                //TODO: make this recursive
-                //cout << "( " << std::to_string(i) << ", " << std::to_string(j) << " )" << endl;
-                color = getLighting(myHit, 0);
+                float red = 0, green = 0, blue = 0, alpha = 1;
 
-            }
-            else color = background;
-            outputImg.setPixel(i, j, color);
+                for (float m = (1.f / sampling.sampleSize) / 2; m < 1; m += 1.f / sampling.sampleSize) {
+                    for (float n = (1.f / sampling.sampleSize) / 2; n < 1; n += 1.f / sampling.sampleSize) {
+                        // m and n now refer to the center of each ray location we want
+                        // Add some noise, then send the ray.
+                        // cout << "m, n: " << m << ", " << n << endl;
+                        float u = (halfW - (imgW) * ((i + m + randomPixelLocationNoise((1.f / sampling.sampleSize) / 2)) / imgW));
+                        float v = (halfH - (imgH) * ((j + n + randomPixelLocationNoise((1.f / sampling.sampleSize) / 2)) / imgH));
+
+                        // p : the point u,v in 3D camera coordinates
+                        Point3D p = d * forward + u * right + v * up + eye;
+                        //cout << p << endl;
+                        // rayDir : ray starting at eye and going through the image plane at p
+                        Dir3D rayDir = (p - eye);
+
+                        Color color = evaluateRayTree(eye, rayDir);
+                    
+                        red += color.r;
+                        green += color.g;
+                        blue += color.b;
+                    }
+                }
+                 // We know where we want the ray to go, so now we just need to know how large each pixel is and split it up
+    //          _________________
+    //          |       |   *   |
+    //          |   *   |       |
+    //          _________________
+    //          |       |    *  |
+    //          |   *   |       |
+    //          _________________
+                int aveSum = sampling.sampleSize * sampling.sampleSize;
+                outputImg.setPixel(i, j, Color(red / aveSum, green / aveSum, blue / aveSum));
+
+
+            } 
+            else {
+                //cast 1 ray per pixel in the image plane
+                // (u,v) : coordinate on the image plane for the center of the pixel
+                float u = (halfW - (imgW) * ((i + 0.5) / imgW));
+                float v = (halfH - (imgH) * ((j + 0.5) / imgH));
+                // p : the point u,v in 3D camera coordinates
+                Point3D p = d * forward + u * right + v * up + eye;
+                //cout << p << endl;
+                // rayDir : ray starting at eye and going through the image plane at p
+                Dir3D rayDir = (p - eye);
+                mCurrentDepth = 0;
+                Color color = evaluateRayTree(eye, rayDir);
+                
+                outputImg.setPixel(i, j, color);
+            }            
         }
     }
     auto t_end = std::chrono::high_resolution_clock::now();
@@ -194,58 +220,56 @@ Hit findIntersection(Point3D p1, Point3D p2) {
     return closestHit;
 }
 
-Color getLighting(Node* parentNode, int currentLevel) {    
-    //cout << currentLevel << endl;
+Color getLighting(Hit hit, Dir3D ray) {
     Color totalColor = Color(0, 0, 0);
     for (Light* l : lights) {
         //cout << "light type = " << std::to_string(l->mType) << endl;
         if (l->mType == AMBIENT) {
-            Color myMult = l->mColor * parentNode->mValue.mMaterial.mAmbientColor;
+            Color myMult = l->mColor * hit.mMaterial.mAmbientColor;
             totalColor = totalColor + myMult; 
         } else if (l->mType == SPOT) {
             SpotLight* sl = (SpotLight*)(l); 
-            Hit lightIntersect = findIntersection(sl->mPosition, (parentNode->mValue.mPosition + parentNode->mValue.mNormal * 0.05f));
+            Hit lightIntersect = findIntersection(sl->mPosition, (hit.mPosition + hit.mNormal * 0.05f));
             if (!lightIntersect.mIntersected) {
-                Dir3D lightToSphere = (parentNode->mValue.mPosition) - sl->mPosition;
+                Dir3D lightToSphere = (hit.mPosition) - sl->mPosition;
                 float angleToLight = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
-                float deflectionScaling = dot(parentNode->mValue.mNormal, -1.f * sl->mDirection.normalized());
+                float deflectionScaling = dot(hit.mNormal, -1.f * sl->mDirection.normalized());
                 if (angleToLight <= sl->mMinAngle) {
-                    totalColor = totalColor + parentNode->mValue.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+                    totalColor = totalColor + hit.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
                 }
                 else if (angleToLight > sl->mMinAngle && angleToLight < sl->mMaxAngle) {
                     float range = (sl->mMaxAngle - sl->mMinAngle);
                     float diff = angleToLight - sl->mMinAngle;
                     float intensity = 1 - diff / range;
-                    totalColor = totalColor + intensity * parentNode->mValue.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+                    totalColor = totalColor + intensity * hit.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
                 }
             }
-            else totalColor = Color(1, 0, 0);
         }
         else if (l->mType == DIRECTIONAL) {
             DirectionalLight* dl = (DirectionalLight*)(l);
-            Hit lightIntersect = findIntersection((parentNode->mValue.mPosition + parentNode->mValue.mNormal * 0.5f + dl->mDirection * 100000.f), vee(parentNode->mValue.mPosition, parentNode->mValue.mPosition + dl->mDirection).normalized());
+            Hit lightIntersect = findIntersection((hit.mPosition + hit.mNormal * 0.5f), vee(hit.mPosition - dl->mDirection, hit.mPosition + hit.mNormal * 0.5f).normalized());
             if (!lightIntersect.mIntersected) {
-                float deflectionScaling = dot(parentNode->mValue.mNormal, dl->mDirection.normalized());
-                totalColor = totalColor + parentNode->mValue.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
+                float deflectionScaling = dot(hit.mNormal, dl->mDirection.normalized());
+                totalColor = totalColor + hit.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
 
-                Color ks = parentNode->mValue.mMaterial.mSpecularColor;
-                Dir3D v = (eye - parentNode->mValue.mPosition).normalized();
+                /*Color ks = hit.mMaterial.mSpecularColor;
+                Dir3D v = (eye - hit.mPosition).normalized();
                 Dir3D h = (v + dl->mDirection).normalized();
-                Dir3D n = parentNode->mValue.mNormal;
-                float p = parentNode->mValue.mMaterial.mSpecularPower;
+                Dir3D n = hit.mNormal;
+                float p = hit.mMaterial.mSpecularPower * 4.f;
                 Color I = dl->mColor;
-                totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);
+                totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);*/
             }
         }
         else if (l->mType == POINT) {
             PointLight* pl = (PointLight*)(l);
-            Dir3D lightDir = pl->mPosition - (parentNode->mValue.mPosition + parentNode->mValue.mNormal * 0.0f);
-            Hit lightIntersect = findIntersection(parentNode->mValue.mPosition + parentNode->mValue.mNormal * 0.05f, pl->mPosition);
+            Dir3D lightDir = pl->mPosition - (hit.mPosition + hit.mNormal * 0.0f);
+            Hit lightIntersect = findIntersection(hit.mPosition + hit.mNormal * 0.05f, pl->mPosition);
             if (!lightIntersect.mIntersected) {
-                float dist = (pl->mPosition).distToSqr(parentNode->mValue.mPosition);
+                float dist = (pl->mPosition).distToSqr(hit.mPosition);
                 float coefficient = 1.f / dist;
-                float myDot = dot(parentNode->mValue.mNormal, lightDir.normalized());
-                totalColor = totalColor + coefficient * parentNode->mValue.mMaterial.mDiffuseColor * pl->mColor * std::max(0.f, myDot);
+                float myDot = dot(hit.mNormal, lightDir.normalized());
+                totalColor = totalColor + coefficient * hit.mMaterial.mDiffuseColor * pl->mColor * std::max(0.f, myDot);
 
                 // specular amount = ks * I * max(0 , dot(n, h)) ^ p
                 // ks: specular color
@@ -255,35 +279,48 @@ Color getLighting(Node* parentNode, int currentLevel) {
                 // n: surface normal
                 // p: specular coefficient
                 // I: light color
-                Color ks = parentNode->mValue.mMaterial.mSpecularColor;
-                Dir3D v = (eye - parentNode->mValue.mPosition).normalized();
-                Dir3D h = (v + lightDir.normalized()).normalized();
-                Dir3D n = parentNode->mValue.mNormal;
-                float p = parentNode->mValue.mMaterial.mSpecularPower;
-                Color I = pl->mColor;
-                totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(n, h)), p);
+                //Color ks = hit.mMaterial.mSpecularColor;
+                //Dir3D v = (eye - hit.mPosition).normalized();
+                //Dir3D h = (v + lightDir.normalized()).normalized();
+                //Dir3D n = hit.mNormal;
+                //float p = hit.mMaterial.mSpecularPower * 4.f;
+                //Color I = pl->mColor;
+                //Color specToAdd = ks * I * std::pow(std::max(0.f, dot(n, h)), p);
+                ////if (specToAdd.r > 0 && specToAdd.g > 0 && specToAdd.b > 0 ) cout << specToAdd << endl;
+                //totalColor = totalColor + specToAdd;
+                
             }
         }
         
     }
-    if (mRecursiveDepth > 0 && currentLevel < mRecursiveDepth - 1) {
-        Dir3D v = (parentNode->mValue.mPosition - eye);
-        Dir3D rayDir = 2 * dot(parentNode->mValue.mNormal, v) * parentNode->mValue.mNormal - v;
 
-        Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
-
-        Hit myHit = findIntersection(eye, rayLine);
-        if (myHit.mIntersected) {
-            int i = currentLevel;
-
-            Node* reflected = new Node();
-            reflected->mType = 1;
-            reflected->mValue = myHit;
-            parentNode->mColor = getLighting(reflected, i + 1);
-            mRayTree->addChild(parentNode, reflected);
-            
-            //totalColor = totalColor + getLighting(myHit, i + 1);
-        }
+    if (mCurrentDepth < maxDepth) {
+        Dir3D rayDir = 2 * dot(hit.mNormal, -1 * ray) * hit.mNormal + ray;
+        totalColor = totalColor + hit.mMaterial.mSpecularColor * evaluateRayTree(hit.mPosition + 0.005f * rayDir, rayDir);
     }
+    
     return totalColor.getTonemapped();
+}
+
+Color evaluateRayTree(Point3D rayStart, Dir3D ray) {
+    //cout << std::to_string(mCurrentDepth) << ",  ";
+    mCurrentDepth++;
+    Line3D rayLine = vee(rayStart, ray).normalized();
+    Hit myHit = findIntersection(rayStart, rayLine);
+    if (myHit.mIntersected) {
+        return getLighting(myHit, ray); 
+    }
+    else {
+        return background;
+    }
+}
+
+Color getJitteredColor(int sampleSize)
+{
+    return Color();
+}
+
+// https://stackoverflow.com/questions/13408990/how-to-generate-random-float-number-in-c
+float randomPixelLocationNoise(float noiseSize) {
+    return (float)rand() / (float)(RAND_MAX / (2 * noiseSize)) - noiseSize;
 }

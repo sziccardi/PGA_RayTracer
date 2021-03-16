@@ -182,6 +182,7 @@ struct Dir3D{
   Point3D operator+(Point3D rhs);
   Dir3D operator+(Dir3D rhs);
   Dir3D operator-(Dir3D rhs);
+  bool operator==(Dir3D rhs);
 
   float magnitude(){
     return sqrt(x*x+y*y+z*z);
@@ -347,6 +348,10 @@ inline Point3D Point3D::operator-(Dir3D rhs){
 
 
 //Operations on Directions:
+inline bool Dir3D::operator==(Dir3D other) {
+    return (MultiVector(*this) == MultiVector(other));
+}
+
 inline Point3D Dir3D::operator+(Point3D rhs){
   return Point3D(x+rhs.x,y+rhs.y,z+rhs.z);
 }

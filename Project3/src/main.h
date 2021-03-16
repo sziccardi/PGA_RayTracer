@@ -32,6 +32,9 @@ Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCent
 Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius);
 
 //LIGHTING
-RayTree* mRayTree = nullptr;
-int mRecursiveDepth = 2;
-Color getLighting(Node* parentNode, int currentLevel);
+int mCurrentDepth = 0;
+Color getLighting(Hit hit, Dir3D ray);
+Color evaluateRayTree(Point3D rayStart, Dir3D ray);
+
+// Sampling
+float randomPixelLocationNoise(float noiseSize);

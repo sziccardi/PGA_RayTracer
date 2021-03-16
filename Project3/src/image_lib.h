@@ -25,6 +25,12 @@ struct Color{
       total += std::to_string(b) + ")";
       return total;
   }
+
+  bool operator==(Color other) {
+      if (r == other.r && g == other.g && b == other.b) return true;
+      return false;
+  }
+
   //https://64.github.io/tonemapping/
   Color getTonemapped() {
       float rNew = std::min(r, 1.0f);
