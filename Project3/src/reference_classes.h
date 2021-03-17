@@ -13,6 +13,19 @@ enum SamplingType { NONE, JITTERED };
 // ---------------------------------
 //  Define Primatives
 // ---------------------------------
+struct Coord2D {
+	float mU;
+	float mV;
+	Coord2D() {
+		mU = -1;
+		mV = -1;
+	}
+	Coord2D(float u, float v) {
+		mU = u;
+		mV = v;
+	}
+};
+
 struct Material {
 	Color mAmbientColor, mDiffuseColor, mSpecularColor, mTransmissiveColor;
 	float mSpecularPower, mRefractionIndex;
@@ -59,6 +72,20 @@ struct Material {
 	}
 };
 
+struct Vertex {
+	Point3D mPosition;
+	Dir3D mNormal;
+	Coord2D mBaryCoord;
+	Vertex(Point3D pos) {
+		mPosition = pos;
+	}
+	Vertex(Point3D pos, Dir3D norm, Coord2D barycoord) {
+		mPosition = pos;
+		mNormal = norm;
+		mBaryCoord = barycoord;
+	}
+};
+
 struct Object {
 	Material mMaterial;
 	Point3D mCenter;
@@ -72,7 +99,25 @@ struct Sphere : Object {
 	float mRadius;
 	Sphere(Material m, Point3D position, float radius) : Object (m, position) {
 		mRadius = radius;
-	
+	}
+};
+
+struct Triangle : Object {
+	int mVert1 = -1, mVert2 = -1, mVert3 = -1;
+	int mNorm1 = -1, mNorm2 = -1, mNorm3 = -1;
+	Dir3D mNormal;
+	Triangle(int vert1Index, int vert2Index, int vert3Index, Point3D avgPos, Material m) : Object(m, avgPos) {
+		mVert1 = vert1Index;
+		mVert2 = vert2Index;
+		mVert3 = vert3Index;
+	}
+	Triangle(int vert1Index, int vert2Index, int vert3Index, int norm1Index, int norm2Index, int norm3Index, Point3D avgPos, Material m) : Object(m, avgPos) {
+		mVert1 = vert1Index;
+		mVert2 = vert2Index;
+		mVert3 = vert3Index;
+		mNorm1 = norm1Index;
+		mNorm2 = norm2Index;
+		mNorm3 = norm3Index;
 	}
 };
 

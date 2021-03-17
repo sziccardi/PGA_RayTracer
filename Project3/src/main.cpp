@@ -259,7 +259,7 @@ Color getLighting(Hit hit, Dir3D ray) {
                 Dir3D n = hit.mNormal;
                 float p = hit.mMaterial.mSpecularPower;
                 Color I = dl->mColor;
-                totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(v, r)), p);
+                totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, r)), p);
             }
         }
         else if (l->mType == POINT) {
@@ -287,7 +287,7 @@ Color getLighting(Hit hit, Dir3D ray) {
                 Dir3D n = hit.mNormal;
                 float p = hit.mMaterial.mSpecularPower;
                 Color I = pl->mColor;
-                totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(v, r)), p);
+                totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(n, h)), p);
                 
             }
         }
