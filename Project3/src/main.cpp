@@ -311,7 +311,7 @@ Color getLighting(Hit intersection, int depth) {
                 Color I = pl->mColor;
                 Color specToAdd = ks * I * std::pow(std::max(0.f, dot(n, h)), p);
                 //if (specToAdd.r > 0 && specToAdd.g > 0 && specToAdd.b > 0 ) cout << specToAdd << endl;
-                totalColor = totalColor + specToAdd;
+                totalColor = totalColor + coefficient * specToAdd;
                 
             }
         }        
@@ -323,13 +323,18 @@ Color getLighting(Hit intersection, int depth) {
     // Ray mirror = Reflect( ray, hit.normal ); DONE
     // contribution += Kr*EvaluateRayTree( scene, mirror )
 
-    // Plane3D hitPlane = dot(intersection.mPosition, intersection.mNormal);
-    // Line3D refl = sandwhich(hitPlane, intersection.mRay);
-    // float ldotr = std::max(dot(intersection.mRay, refl), 0.0f);
+    Plane3D hitPlane = dot(intersection.mPosition, (Line3D) intersection.mNormal);
+    intersection.mRay.print();
+    Line3D refl = sandwhich(hitPlane, intersection.mRay * -1);
+    float ldotr = std::max(dot(intersection.mRay.dir(), refl.dir()), 0.0f);
 
-    // Color reflectColor = evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, refl, depth + 1);
-    // // TODO: ldotr is currently acting at Kr
-    // totalColor = totalColor + ldotr * reflectColor;
+    std::cout << "refl scale: " << ldotr << std::endl;
+    Color reflectColor = intersection.mMaterial.mSpecularColor * evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, refl, depth + 1);
+    // TODO: ldotr is currently acting at Kr
+    // TODO: Kr should be the specular color of the material
+
+    std::cout << "reflect color: " << reflectColor.r << ", " << reflectColor.g << ", " << reflectColor.b << std::endl;
+    totalColor = totalColor + reflectColor;
 
     // Ray glass = Refract( ray, hit.normal );
     // contribution += Kt*EvaluateRayTree( scene, glass ); contribution += Ambient(); // superhack!
