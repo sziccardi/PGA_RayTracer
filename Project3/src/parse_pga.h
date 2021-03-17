@@ -84,13 +84,13 @@ void parseSceneFile(std::string fileName){
                    int start = subString.find_first_not_of(" \t\r\n");
                    int end = subString.substr(start).find_first_of(" \t\r\n");
                    imgName = subString.substr(start, end);
-                   cout << "output image = " << imgName << endl;
+                   //cout << "output image = " << imgName << endl;
                }
 
                command = "sphere:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new sphere = (";
+                   //cout << "new sphere = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -98,7 +98,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringX = subString.substr(start);
                    if (end >= 0) stringX = subString.substr(start, start + end);
                    float x = std::stof(stringX);
-                   cout << std::to_string(x) << ", ";
+                   //cout << std::to_string(x) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -106,7 +106,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringY = subString.substr(start);
                    if (end >= 0) stringY = subString.substr(start, start + end);
                    float y = std::stof(stringY);
-                   cout << std::to_string(y) << ", ";
+                   //cout << std::to_string(y) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -114,7 +114,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringZ = subString.substr(start);
                    if (end >= 0) stringZ = subString.substr(start, start + end);
                    float z = std::stof(stringZ);
-                   cout << std::to_string(z) << ") ";
+                   //cout << std::to_string(z) << ") ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -123,7 +123,7 @@ void parseSceneFile(std::string fileName){
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    float r = std::stof(stringR);
 
-                   cout << "r = " << std::to_string(r) << endl;
+                   //cout << "r = " << std::to_string(r) << endl;
 
                    spheres.push_back(Sphere(currentMaterial, Point3D(x, y, z), r));
                }
@@ -131,7 +131,7 @@ void parseSceneFile(std::string fileName){
                command = "film_resolution:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new image resolution = (";
+                   //cout << "new image resolution = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -139,7 +139,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringW = subString.substr(start);
                    if (end >= 0) stringW = subString.substr(start, start + end);
                    float w = std::stof(stringW);
-                   cout << std::to_string(w) << ", ";
+                   //cout << std::to_string(w) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -147,7 +147,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringH = subString.substr(start);
                    if (end >= 0) stringH = subString.substr(start, start + end);
                    float h = std::stof(stringH);
-                   cout << std::to_string(h) << ")" << endl;
+                   //cout << std::to_string(h) << ")" << endl;
 
                    img_width = w;
                    img_height = h;
@@ -156,7 +156,7 @@ void parseSceneFile(std::string fileName){
                command = "camera_pos:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new camera pos = (";
+                   //cout << "new camera pos = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -164,7 +164,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringX = subString.substr(start);
                    if (end >= 0) stringX = subString.substr(start, start + end);
                    float x = std::stof(stringX);
-                   cout << std::to_string(x) << ", ";
+                   //cout << std::to_string(x) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -172,7 +172,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringY = subString.substr(start);
                    if (end >= 0) stringY = subString.substr(start, start + end);
                    float y = std::stof(stringY);
-                   cout << std::to_string(y) << ", ";
+                   //cout << std::to_string(y) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -180,7 +180,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringZ = subString.substr(start);
                    if (end >= 0) stringZ = subString.substr(start, start + end);
                    float z = std::stof(stringZ);
-                   cout << std::to_string(z) << ") " << endl;
+                   //cout << std::to_string(z) << ") " << endl;
 
                    eye = Point3D(x, y, z);
                }
@@ -188,7 +188,7 @@ void parseSceneFile(std::string fileName){
                command = "camera_fwd:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new camera fwd = (";
+                   //cout << "new camera fwd = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -196,7 +196,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringX = subString.substr(start);
                    if (end >= 0) stringX = subString.substr(start, start + end);
                    float x = std::stof(stringX);
-                   cout << std::to_string(x) << ", ";
+                   //cout << std::to_string(x) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -204,7 +204,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringY = subString.substr(start);
                    if (end >= 0) stringY = subString.substr(start, start + end);
                    float y = std::stof(stringY);
-                   cout << std::to_string(y) << ", ";
+                   //cout << std::to_string(y) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -212,7 +212,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringZ = subString.substr(start);
                    if (end >= 0) stringZ = subString.substr(start, start + end);
                    float z = std::stof(stringZ);
-                   cout << std::to_string(z) << ") " << endl;
+                   //cout << std::to_string(z) << ") " << endl;
 
                    forward = Dir3D(x, y, z);
                }
@@ -220,7 +220,7 @@ void parseSceneFile(std::string fileName){
                command = "camera_up:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new camera up = (";
+                   //cout << "new camera up = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -228,7 +228,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringX = subString.substr(start);
                    if (end >= 0) stringX = subString.substr(start, start + end);
                    float x = std::stof(stringX);
-                   cout << std::to_string(x) << ", ";
+                   //cout << std::to_string(x) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -236,7 +236,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringY = subString.substr(start);
                    if (end >= 0) stringY = subString.substr(start, start + end);
                    float y = std::stof(stringY);
-                   cout << std::to_string(y) << ", ";
+                   //cout << std::to_string(y) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -244,7 +244,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringZ = subString.substr(start);
                    if (end >= 0) stringZ = subString.substr(start, start + end);
                    float z = std::stof(stringZ);
-                   cout << std::to_string(z) << ") " << endl;
+                   //cout << std::to_string(z) << ") " << endl;
 
                    up = Dir3D(x, y, z);
                }
@@ -252,7 +252,7 @@ void parseSceneFile(std::string fileName){
                command = "camera_fov_ha:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new camera fov ha = ";
+                   //cout << "new camera fov ha = ";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -260,7 +260,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringFOV = subString.substr(start);
                    if (end >= 0) stringFOV = subString.substr(start, start + end);
                    float ha = std::stof(stringFOV);
-                   cout << std::to_string(ha) << endl;
+                   //cout << std::to_string(ha) << endl;
 
                    halfAngleVFOV = ha;
                }
@@ -268,7 +268,7 @@ void parseSceneFile(std::string fileName){
                command = "background:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new background color = (";
+                   //cout << "new background color = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -276,7 +276,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    float r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -284,7 +284,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    float g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -292,7 +292,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    float b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
 
                    background = Color(r, g, b);
                }
@@ -300,8 +300,8 @@ void parseSceneFile(std::string fileName){
                command = "material:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new material" << endl;
-                   cout << "ambient color = (";
+                   //cout << "new material" << endl;
+                   //cout << "ambient color = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -309,7 +309,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    float r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -317,7 +317,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    float g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -325,18 +325,18 @@ void parseSceneFile(std::string fileName){
                    std::string stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    float b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
 
                    Color ambient = Color(r, g, b);
 
-                   cout << "diffuse color = (";
+                   //cout << "diffuse color = (";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -344,7 +344,7 @@ void parseSceneFile(std::string fileName){
                    stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -352,18 +352,18 @@ void parseSceneFile(std::string fileName){
                    stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
 
                    Color diffuse = Color(r, g, b);
 
-                   cout << "specular color = (";
+                   //cout << "specular color = (";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -371,7 +371,7 @@ void parseSceneFile(std::string fileName){
                    stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -379,7 +379,7 @@ void parseSceneFile(std::string fileName){
                    stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
                    Color specular = Color(r, g, b);
 
                    subString = subString.substr(end + start);
@@ -388,16 +388,16 @@ void parseSceneFile(std::string fileName){
                    std::string stringNS = subString.substr(start);
                    if (end >= 0) stringNS = subString.substr(start, start + end);
                    float ns = std::stof(stringNS);
-                   cout << "new ns = " << std::to_string(ns) << endl;
+                   //cout << "new ns = " << std::to_string(ns) << endl;
 
-                   cout << "transmissive color = (";
+                   //cout << "transmissive color = (";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -405,7 +405,7 @@ void parseSceneFile(std::string fileName){
                    stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -413,7 +413,7 @@ void parseSceneFile(std::string fileName){
                    stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
                    Color transmissive = Color(r, g, b);
 
                    subString = subString.substr(end + start);
@@ -422,7 +422,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringIOR = subString.substr(start);
                    if (end >= 0) stringIOR = subString.substr(start, start + end);
                    float ior = std::stof(stringIOR);
-                   cout << "new ior = " << std::to_string(ior) << endl;
+                   //cout << "new ior = " << std::to_string(ior) << endl;
 
                    currentMaterial = Material(ambient, diffuse, specular, ns, transmissive, ior);
                }
@@ -430,8 +430,8 @@ void parseSceneFile(std::string fileName){
                command = "point_light:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new point light " << endl;
-                   cout << "color = (";
+                   //cout << "new point light " << endl;
+                   //cout << "color = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -439,7 +439,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    float r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -447,7 +447,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    float g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -455,16 +455,16 @@ void parseSceneFile(std::string fileName){
                    std::string stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    float b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
 
-                   cout << "position = ( ";
+                   //cout << "position = ( ";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    std::string stringX = subString.substr(start);
                    if (end >= 0) stringX = subString.substr(start, start + end);
                    float x = std::stof(stringX);
-                   cout << std::to_string(x) << ", ";
+                   //cout << std::to_string(x) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -472,7 +472,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringY = subString.substr(start);
                    if (end >= 0) stringY = subString.substr(start, start + end);
                    float y = std::stof(stringY);
-                   cout << std::to_string(y) << ", ";
+                   //cout << std::to_string(y) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -480,7 +480,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringZ = subString.substr(start);
                    if (end >= 0) stringZ = subString.substr(start, start + end);
                    float z = std::stof(stringZ);
-                   cout << std::to_string(z) << ") " << endl;
+                   //cout << std::to_string(z) << ") " << endl;
 
                    lights.push_back(new PointLight(Color(r, g, b), Point3D(x, y, z)));
                }
@@ -488,8 +488,8 @@ void parseSceneFile(std::string fileName){
                command = "directional_light:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new directional light " << endl;
-                   cout << "color = (";
+                   //cout << "new directional light " << endl;
+                   //cout << "color = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -497,7 +497,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    float r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -505,7 +505,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    float g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -513,16 +513,16 @@ void parseSceneFile(std::string fileName){
                    std::string stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    float b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
 
-                   cout << "direction = ( ";
+                   //cout << "direction = ( ";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    std::string stringX = subString.substr(start);
                    if (end >= 0) stringX = subString.substr(start, start + end);
                    float x = std::stof(stringX);
-                   cout << std::to_string(x) << ", ";
+                   //cout << std::to_string(x) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -530,7 +530,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringY = subString.substr(start);
                    if (end >= 0) stringY = subString.substr(start, start + end);
                    float y = std::stof(stringY);
-                   cout << std::to_string(y) << ", ";
+                   //cout << std::to_string(y) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -538,7 +538,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringZ = subString.substr(start);
                    if (end >= 0) stringZ = subString.substr(start, start + end);
                    float z = std::stof(stringZ);
-                   cout << std::to_string(z) << ") " << endl;
+                   //cout << std::to_string(z) << ") " << endl;
 
                    lights.push_back(new DirectionalLight(Color(r, g, b), Dir3D(x, y, z)));
                }
@@ -546,8 +546,8 @@ void parseSceneFile(std::string fileName){
                command = "spot_light:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new spot light " << endl;
-                   cout << "color = (";
+                   //cout << "new spot light " << endl;
+                   //cout << "color = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -555,7 +555,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    float r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -563,7 +563,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    float g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -571,16 +571,16 @@ void parseSceneFile(std::string fileName){
                    std::string stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    float b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
 
-                   cout << "position = ( ";
+                   //cout << "position = ( ";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    std::string stringX = subString.substr(start);
                    if (end >= 0) stringX = subString.substr(start, start + end);
                    float x = std::stof(stringX);
-                   cout << std::to_string(x) << ", ";
+                   //cout << std::to_string(x) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -588,7 +588,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringY = subString.substr(start);
                    if (end >= 0) stringY = subString.substr(start, start + end);
                    float y = std::stof(stringY);
-                   cout << std::to_string(y) << ", ";
+                   //cout << std::to_string(y) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -596,16 +596,16 @@ void parseSceneFile(std::string fileName){
                    std::string stringZ = subString.substr(start);
                    if (end >= 0) stringZ = subString.substr(start, start + end);
                    float z = std::stof(stringZ);
-                   cout << std::to_string(z) << ") " << endl;
+                   //cout << std::to_string(z) << ") " << endl;
 
-                   cout << "direction = ( ";
+                   //cout << "direction = ( ";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    std::string stringDX = subString.substr(start);
                    if (end >= 0) stringDX = subString.substr(start, start + end);
                    float dx = std::stof(stringDX);
-                   cout << std::to_string(dx) << ", ";
+                   //cout << std::to_string(dx) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -613,7 +613,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringDY = subString.substr(start);
                    if (end >= 0) stringDY = subString.substr(start, start + end);
                    float dy = std::stof(stringDY);
-                   cout << std::to_string(dy) << ", ";
+                   //cout << std::to_string(dy) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -621,7 +621,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringDZ = subString.substr(start);
                    if (end >= 0) stringDZ = subString.substr(start, start + end);
                    float dz = std::stof(stringDZ);
-                   cout << std::to_string(dz) << ") " << endl;
+                   //cout << std::to_string(dz) << ") " << endl;
 
 
                    subString = subString.substr(end + start);
@@ -630,7 +630,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringA1 = subString.substr(start);
                    if (end >= 0) stringA1 = subString.substr(start, start + end);
                    float a1 = std::stof(stringA1);
-                   cout << "minAngle = " << std::to_string(a1) << endl;
+                   //cout << "minAngle = " << std::to_string(a1) << endl;
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -638,7 +638,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringA2 = subString.substr(start);
                    if (end >= 0) stringA2 = subString.substr(start, start + end);
                    float a2 = std::stof(stringA2);
-                   cout << "minAngle = " << std::to_string(a2) << endl;
+                   //cout << "minAngle = " << std::to_string(a2) << endl;
 
                    lights.push_back(new SpotLight(Color(r, g, b), Point3D(x, y, z), Dir3D(dx, dy, dz), a1, a2));
                }
@@ -646,7 +646,7 @@ void parseSceneFile(std::string fileName){
                command = "ambient_light:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new ambient light with color = (";
+                   //cout << "new ambient light with color = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -654,7 +654,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
                    float r = std::stof(stringR);
-                   cout << std::to_string(r) << ", ";
+                   //cout << std::to_string(r) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -662,7 +662,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringG = subString.substr(start);
                    if (end >= 0) stringG = subString.substr(start, start + end);
                    float g = std::stof(stringG);
-                   cout << std::to_string(g) << ", ";
+                   //cout << std::to_string(g) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -670,7 +670,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringB = subString.substr(start);
                    if (end >= 0) stringB = subString.substr(start, start + end);
                    float b = std::stof(stringB);
-                   cout << std::to_string(b) << ") " << endl;
+                   //cout << std::to_string(b) << ") " << endl;
 
                    lights.push_back(new Light(Color(r, g, b)));
                }
@@ -678,7 +678,7 @@ void parseSceneFile(std::string fileName){
                command = "max_depth:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new max depth = ";
+                   //cout << "new max depth = ";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -686,7 +686,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringN = subString.substr(start);
                    if (end >= 0) stringN = subString.substr(start, start + end);
                    float n = std::stof(stringN);
-                   cout << std::to_string(n) << endl;
+                   //cout << std::to_string(n) << endl;
 
                    maxDepth = n;
                }
@@ -710,14 +710,14 @@ void parseSceneFile(std::string fileName){
                         int sampleSize = (int) std::stof(stringS);
 
                         sampling = Sampling(JITTERED, sampleSize);
-                        cout << "Jittered Sampling turned on with : " << std::to_string(sampleSize * sampleSize) << " Samples" << endl;
+                        //cout << "Jittered Sampling turned on with : " << std::to_string(sampleSize * sampleSize) << " Samples" << endl;
                     }
                }
 
                command = "max_vertices:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new max verts = ";
+                   //cout << "new max verts = ";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -725,14 +725,14 @@ void parseSceneFile(std::string fileName){
                    std::string stringN = subString.substr(start);
                    if (end >= 0) stringN = subString.substr(start, start + end);
                    float n = std::stof(stringN);
-                   cout << std::to_string(n) << endl;
+                   //cout << std::to_string(n) << endl;
 
                    maxVerts = n;
                }
                command = "max_norms:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new max norms = ";
+                   //cout << "new max norms = ";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -740,7 +740,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringN = subString.substr(start);
                    if (end >= 0) stringN = subString.substr(start, start + end);
                    float n = std::stof(stringN);
-                   cout << std::to_string(n) << endl;
+                   //cout << std::to_string(n) << endl;
 
                    maxNorms = n;
                }
@@ -749,7 +749,7 @@ void parseSceneFile(std::string fileName){
                found = line.find(command);
                if (found != std::string::npos) {
                    if (maxVerts > 0) {
-                       cout << "new vert pos = (";
+                       //cout << "new vert pos = (";
                        iter = found + command.length();
                        std::string subString = line.substr(iter);
                        int start = subString.find_first_not_of(" \t\r\n");
@@ -757,7 +757,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringX = subString.substr(start);
                        if (end >= 0) stringX = subString.substr(start, start + end);
                        float x = std::stof(stringX);
-                       cout << std::to_string(x) << ", ";
+                       //cout << std::to_string(x) << ", ";
 
                        subString = subString.substr(end + start);
                        start = subString.find_first_not_of(" \t\r\n");
@@ -765,7 +765,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringY = subString.substr(start);
                        if (end >= 0) stringY = subString.substr(start, start + end);
                        float y = std::stof(stringY);
-                       cout << std::to_string(y) << ", ";
+                       //cout << std::to_string(y) << ", ";
 
                        subString = subString.substr(end + start);
                        start = subString.find_first_not_of(" \t\r\n");
@@ -773,7 +773,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringZ = subString.substr(start);
                        if (end >= 0) stringZ = subString.substr(start, start + end);
                        float z = std::stof(stringZ);
-                       cout << std::to_string(z) << ") " << endl;
+                       //cout << std::to_string(z) << ") " << endl;
 
                        verts.push_back(Vertex(Point3D(x, y, z)));
                    }
@@ -786,7 +786,7 @@ void parseSceneFile(std::string fileName){
                found = line.find(command);
                if (found != std::string::npos) {
                    if (maxNorms > 0) {
-                       cout << "new normal = (";
+                       //cout << "new normal = (";
                        iter = found + command.length();
                        std::string subString = line.substr(iter);
                        int start = subString.find_first_not_of(" \t\r\n");
@@ -794,7 +794,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringX = subString.substr(start);
                        if (end >= 0) stringX = subString.substr(start, start + end);
                        float x = std::stof(stringX);
-                       cout << std::to_string(x) << ", ";
+                       //cout << std::to_string(x) << ", ";
 
                        subString = subString.substr(end + start);
                        start = subString.find_first_not_of(" \t\r\n");
@@ -802,7 +802,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringY = subString.substr(start);
                        if (end >= 0) stringY = subString.substr(start, start + end);
                        float y = std::stof(stringY);
-                       cout << std::to_string(y) << ", ";
+                       //cout << std::to_string(y) << ", ";
 
                        subString = subString.substr(end + start);
                        start = subString.find_first_not_of(" \t\r\n");
@@ -810,7 +810,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringZ = subString.substr(start);
                        if (end >= 0) stringZ = subString.substr(start, start + end);
                        float z = std::stof(stringZ);
-                       cout << std::to_string(z) << ") " << endl;
+                       //cout << std::to_string(z) << ") " << endl;
 
                        norms.push_back(Dir3D(x, y, z));
                    }
@@ -822,7 +822,7 @@ void parseSceneFile(std::string fileName){
                command = "triangle:";
                found = line.find(command);
                if (found != std::string::npos) {
-                    cout << "new triangle with verts = (";
+                    //cout << "new triangle with verts = (";
                     iter = found + command.length();
                     std::string subString = line.substr(iter);
                     int start = subString.find_first_not_of(" \t\r\n");
@@ -830,7 +830,7 @@ void parseSceneFile(std::string fileName){
                     std::string stringI = subString.substr(start);
                     if (end >= 0) stringI = subString.substr(start, start + end);
                     int i = std::stoi(stringI);
-                    cout << std::to_string(i) << ", ";
+                    //cout << std::to_string(i) << ", ";
 
                     subString = subString.substr(end + start);
                     start = subString.find_first_not_of(" \t\r\n");
@@ -838,7 +838,7 @@ void parseSceneFile(std::string fileName){
                     std::string stringJ = subString.substr(start);
                     if (end >= 0) stringJ = subString.substr(start, start + end);
                     int j = std::stoi(stringJ);
-                    cout << std::to_string(j) << ", ";
+                    //cout << std::to_string(j) << ", ";
 
                     subString = subString.substr(end + start);
                     start = subString.find_first_not_of(" \t\r\n");
@@ -846,17 +846,22 @@ void parseSceneFile(std::string fileName){
                     std::string stringK = subString.substr(start);
                     if (end >= 0) stringK = subString.substr(start, start + end);
                     int k = std::stoi(stringK);
-                    cout << std::to_string(k) << ") " << endl;
+                    //cout << std::to_string(k) << ") " << endl;
 
                     Point3D avgPos = (verts[i].mPosition + verts[j].mPosition + verts[k].mPosition) / 3.f;
-                    tris.push_back(Triangle(i, j, k, avgPos, currentMaterial));
+
+                    Dir3D edge1 = verts[j].mPosition - verts[i].mPosition;
+                    Dir3D edge2 = verts[k].mPosition - verts[i].mPosition;
+                    Dir3D norm = cross(edge1, edge2).normalized();
+
+                    tris.push_back(Triangle(i, j, k, avgPos, norm, currentMaterial));
                }
 
                command = "normal_triangle:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new normal triangle:" << endl;
-                   cout << "with verts = (";
+                   //cout << "new normal triangle:" << endl;
+                   //cout << "with verts = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -864,7 +869,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringI = subString.substr(start);
                    if (end >= 0) stringI = subString.substr(start, start + end);
                    int i = std::stoi(stringI);
-                   cout << std::to_string(i) << ", ";
+                   //cout << std::to_string(i) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -872,7 +877,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringJ = subString.substr(start);
                    if (end >= 0) stringJ = subString.substr(start, start + end);
                    int j = std::stoi(stringJ);
-                   cout << std::to_string(j) << ", ";
+                   //cout << std::to_string(j) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -880,18 +885,18 @@ void parseSceneFile(std::string fileName){
                    std::string stringK = subString.substr(start);
                    if (end >= 0) stringK = subString.substr(start, start + end);
                    int k = std::stoi(stringK);
-                   cout << std::to_string(k) << ") " << endl;
+                   //cout << std::to_string(k) << ") " << endl;
 
                    Point3D avgPos = (verts[i].mPosition + verts[j].mPosition + verts[k].mPosition) / 3.f;
 
-                   cout << "and norms = (";
+                   //cout << "and norms = (";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    std::string stringL = subString.substr(start);
                    if (end >= 0) stringL = subString.substr(start, start + end);
                    int l = std::stoi(stringL);
-                   cout << std::to_string(l) << ", ";
+                   //cout << std::to_string(l) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -899,7 +904,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringM = subString.substr(start);
                    if (end >= 0) stringM = subString.substr(start, start + end);
                    int m = std::stoi(stringM);
-                   cout << std::to_string(m) << ", ";
+                   //cout << std::to_string(m) << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -907,9 +912,12 @@ void parseSceneFile(std::string fileName){
                    std::string stringN = subString.substr(start);
                    if (end >= 0) stringN = subString.substr(start, start + end);
                    int n = std::stoi(stringN);
-                   cout << std::to_string(n) << ") " << endl;
+                   //cout << std::to_string(n) << ") " << endl;
 
-                   tris.push_back(Triangle(i, j, k, l, m, n, avgPos, currentMaterial));
+                   Dir3D edge1 = verts[j].mPosition - verts[i].mPosition;
+                   Dir3D edge2 = verts[k].mPosition - verts[i].mPosition;
+                   Dir3D norm = cross(edge1, edge2).normalized();
+                   tris.push_back(Triangle(i, j, k, norm, l, m, n, avgPos, currentMaterial));
                }
            }
         }

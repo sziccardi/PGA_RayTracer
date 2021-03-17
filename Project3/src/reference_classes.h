@@ -25,6 +25,26 @@ struct Coord2D {
 		mV = v;
 	}
 };
+struct Coord3D {
+	float mU;
+	float mV;
+	float mW;
+	Coord3D() {
+		mU = -1;
+		mV = -1;
+		mW = -1;
+	}
+	Coord3D(float u, float v) {
+		mU = u;
+		mV = v;
+		mW = -1;
+	}
+	Coord3D(float u, float v, float w) {
+		mU = u;
+		mV = v;
+		mW = w;
+	}
+};
 
 struct Material {
 	Color mAmbientColor, mDiffuseColor, mSpecularColor, mTransmissiveColor;
@@ -75,14 +95,12 @@ struct Material {
 struct Vertex {
 	Point3D mPosition;
 	Dir3D mNormal;
-	Coord2D mBaryCoord;
 	Vertex(Point3D pos) {
 		mPosition = pos;
 	}
-	Vertex(Point3D pos, Dir3D norm, Coord2D barycoord) {
+	Vertex(Point3D pos, Dir3D norm) {
 		mPosition = pos;
 		mNormal = norm;
-		mBaryCoord = barycoord;
 	}
 };
 
@@ -106,18 +124,23 @@ struct Triangle : Object {
 	int mVert1 = -1, mVert2 = -1, mVert3 = -1;
 	int mNorm1 = -1, mNorm2 = -1, mNorm3 = -1;
 	Dir3D mNormal;
-	Triangle(int vert1Index, int vert2Index, int vert3Index, Point3D avgPos, Material m) : Object(m, avgPos) {
+	bool mUseBarycentric;
+	Triangle(int vert1Index, int vert2Index, int vert3Index, Point3D avgPos, Dir3D normal, Material m) : Object(m, avgPos) {
 		mVert1 = vert1Index;
 		mVert2 = vert2Index;
 		mVert3 = vert3Index;
+		mNormal = normal;
+		mUseBarycentric = false;
 	}
-	Triangle(int vert1Index, int vert2Index, int vert3Index, int norm1Index, int norm2Index, int norm3Index, Point3D avgPos, Material m) : Object(m, avgPos) {
+	Triangle(int vert1Index, int vert2Index, int vert3Index, Dir3D norm, int norm1Index, int norm2Index, int norm3Index, Point3D avgPos, Material m) : Object(m, avgPos) {
 		mVert1 = vert1Index;
 		mVert2 = vert2Index;
 		mVert3 = vert3Index;
 		mNorm1 = norm1Index;
 		mNorm2 = norm2Index;
 		mNorm3 = norm3Index;
+		mNormal = norm;
+		mUseBarycentric = true;
 	}
 };
 
@@ -305,6 +328,4 @@ struct Sampling {
 		sampleSize = samplingSize;
 	}
 };
-
-
 #endif

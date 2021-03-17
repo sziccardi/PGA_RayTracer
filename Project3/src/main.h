@@ -31,6 +31,10 @@ Hit lineSegmentSphereIntersect_fast(Point3D p1, Point3D p2, Point3D sphereCenter
 Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius);
 Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius);
 
+Hit rayTriIntersect(Point3D rayStart, Line3D rayLine, Triangle tri);
+Coord3D getBarycentricCoord(Point3D p, Triangle tri);
+
+
 //LIGHTING
 int mCurrentDepth = 0;
 Color getLighting(Hit hit, Dir3D ray);

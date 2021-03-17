@@ -176,12 +176,23 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
     return Hit();
 }
 
+Hit rayTriIntersect(Point3D rayStart, Line3D rayLine, Triangle tri) {
+    Plane3D triPlane = vee(verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition);
+    auto hitPoint = wedge(rayLine, triPlane);
+    if (hitPoint.w == 0) return Hit(); //ray is parallel
+    if (tri.mUseBarycentric) {
+        Coord3D bary = getBarycentricCoord(Point3D(hitPoint), tri);
+        Dir3D myNorm = bary.mU * norms[tri.mNorm1] + bary.mV * norms[tri.mNorm2] + bary.mW * norms[tri.mNorm3];
+        return Hit(Point3D(hitPoint), myNorm, tri.mMaterial);
+    }
+    return Hit(Point3D(hitPoint), tri.mNormal, tri.mMaterial); //intersect with flat triangle
+}
+
 Hit findIntersection(Point3D rayStart, Line3D rayLine) {
     Hit closestHit = Hit();
     float currMinDist = 10000000000;
     int i = 0;
     for (Sphere s : spheres) {
-        //TODO: add check for max depth
         Hit tempHit = raySphereIntersect_fast(rayStart, rayLine, s.mCenter, s.mRadius);
         if (tempHit.mIntersected) {
             float tempDist = (tempHit.mPosition - rayStart).magnitude();
@@ -330,12 +341,21 @@ Color evaluateRayTree(Point3D rayStart, Dir3D ray) {
     }
 }
 
-Color getJitteredColor(int sampleSize)
-{
-    return Color();
-}
 
 // https://stackoverflow.com/questions/13408990/how-to-generate-random-float-number-in-c
 float randomPixelLocationNoise(float noiseSize) {
     return (float)rand() / (float)(RAND_MAX / (2 * noiseSize)) - noiseSize;
+}
+
+Coord3D getBarycentricCoord(Point3D p, Triangle tri) {
+    Dir3D edge1 = verts[tri.mVert2].mPosition - verts[tri.mVert1].mPosition;
+    Dir3D edge2 = verts[tri.mVert3].mPosition - verts[tri.mVert1].mPosition;
+    Dir3D edge3 = verts[tri.mVert3].mPosition - verts[tri.mVert2].mPosition;
+
+    float totalArea = cross(edge1, edge2).magnitudeSqr();
+    float area1 = cross(edge1, p - verts[tri.mVert1].mPosition).magnitudeSqr();
+    float area2 = cross(edge2, p - verts[tri.mVert1].mPosition).magnitudeSqr();
+    float area3 = cross(edge3, p - verts[tri.mVert2].mPosition).magnitudeSqr();
+    
+    return Coord3D(area1 / totalArea, area2 / totalArea, area3 / totalArea);
 }

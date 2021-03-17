@@ -249,6 +249,7 @@ struct HomogeneousPoint3D{
   }
 };
 
+
 //Motors
 //----------
 //Equivalent to Dual Quaternions
@@ -589,4 +590,14 @@ inline Point3D proj(Point3D p, Line3D l){
   return Point3D(wzy/xyz,wxz/xyz,wyx/xyz);
 }
 
+
+bool sameSide(Point3D p1, Point3D p2, Point3D a, Point3D b) {
+    Dir3D c1 = cross(b - a, p1 - a);
+    Dir3D c2 = cross(b - a, p2 - a);
+    return dot(c1, c2) >= 0;
+}
+
+bool pointInTriangle(Point3D p, Point3D t1, Point3D t2, Point3D t3) {
+    return sameSide(p, t1, t2, t3) && sameSide(p, t2, t1, t3) && sameSide(p, t3, t1, t2);
+}
 #endif
