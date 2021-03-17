@@ -295,8 +295,23 @@ Color getLighting(Hit hit, Dir3D ray) {
     }
 
     if (mCurrentDepth < maxDepth) {
-        Dir3D rayDir = 2 * dot(hit.mNormal, -1 * ray) * hit.mNormal + ray;
-        totalColor = totalColor + hit.mMaterial.mSpecularColor * evaluateRayTree(hit.mPosition + 0.005f * rayDir, rayDir);
+        Dir3D reflectDir = 2 * dot(hit.mNormal, -1 * ray) * hit.mNormal + ray;
+        totalColor = totalColor + hit.mMaterial.mSpecularColor * evaluateRayTree(hit.mPosition + 0.005f * reflectDir, reflectDir);
+
+        //default to air
+        float preIndex = 1.003f, postIndex = 1.003f;
+        if (dot(hit.mNormal, ray) < 0) {
+            //into object
+            postIndex = hit.mMaterial.mRefractionIndex;
+        }
+        else {
+            //out of object
+            preIndex = hit.mMaterial.mRefractionIndex;
+        }
+        float rayNormalDot = dot(ray, hit.mNormal);
+        Dir3D refractDir = preIndex * (ray - hit.mNormal * rayNormalDot) / postIndex;
+        refractDir = refractDir - hit.mNormal * sqrt(1 - (preIndex * preIndex * (1 - rayNormalDot * rayNormalDot)) / (postIndex * postIndex));
+        totalColor = totalColor + hit.mMaterial.mTransmissiveColor * evaluateRayTree(hit.mPosition + 0.0005f * refractDir, refractDir);
     }
     
     return totalColor.getTonemapped();
