@@ -47,14 +47,8 @@ int main(int argc, char** argv) {
                         Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
                         //TODO starting here is the loop over all objects?
 
-                        Hit myHit = findIntersection(eye, rayLine);
-                        Color color;
-                        if (myHit.mIntersected) {
-                            color = getLighting(myHit); //Color(std::abs(myHit.mNormal.x), std::abs(myHit.mNormal.y), std::abs(myHit.mNormal.z)); //TODO do color calculations
-                            //cout << color << endl;
-                        } else {
-                            color = background;
-                        }
+                        Color color = evaluateRayTree(eye, rayLine, 0);
+                        
                         red += color.r;
                         green += color.g;
                         blue += color.b;
@@ -85,14 +79,8 @@ int main(int argc, char** argv) {
                 // rayLine : line version of the ray
                 Line3D rayLine = vee(eye, rayDir).normalized();  //Normalizing here is optional
                 //TODO starting here is the loop over all objects?
-
-                Hit myHit = findIntersection(eye, rayLine);
-                Color color;
-                if (myHit.mIntersected) {
-                    color = getLighting(myHit); //Color(std::abs(myHit.mNormal.x), std::abs(myHit.mNormal.y), std::abs(myHit.mNormal.z)); //TODO do color calculations
-                    //cout << color << endl;
-                }
-                else color = background;
+                Color color = evaluateRayTree(eye, rayLine, 0);
+                
                 outputImg.setPixel(i, j, color);
             }
             
@@ -107,6 +95,20 @@ int main(int argc, char** argv) {
     outputImg.write(imgName.c_str());
     return 0;
 }
+
+Color evaluateRayTree(Point3D start, Line3D rayLine, int depth) {
+    if (depth > maxDepth) return Color();
+    Hit myHit = findIntersection(start, rayLine);
+    Color color;
+    if (myHit.mIntersected) {
+        color = getLighting(myHit, depth); //Color(std::abs(myHit.mNormal.x), std::abs(myHit.mNormal.y), std::abs(myHit.mNormal.z)); //TODO do color calculations
+        //cout << color << endl;
+    }
+    else color = background;
+
+    return color;
+}
+
 Hit lineSegmentSphereIntersect_fast(Point3D p1, Point3D p2, Point3D sphereCenter, float sphereRadius) {
     Line3D rayLine = vee(p1, p2);
     Dir3D dir = rayLine.dir();
@@ -127,17 +129,17 @@ Hit lineSegmentSphereIntersect_fast(Point3D p1, Point3D p2, Point3D sphereCenter
             float val = std::min(t1, t0);
             Point3D p = p1 + val * dir;
             Dir3D norm = (p - sphereCenter).normalized();
-            return Hit(p, norm);
+            return Hit(p, p1, rayLine, norm);
         }
         else if (t0 > 0 && t1 < 0 && t0 < tEnd) {
             Point3D p = p1 + t0 * dir;
             Dir3D norm = (p - sphereCenter).normalized();
-            return Hit(p, norm);
+            return Hit(p, p1, rayLine, norm);
         }
         else if (t1 > 0 && t0 < 0 && t1 < tEnd) {
             Point3D p = p1 + t1 * dir;
             Dir3D norm = (p - sphereCenter).normalized();
-            return Hit(p, norm);
+            return Hit(p, p1, rayLine, norm);
         }
 
     }
@@ -162,17 +164,17 @@ Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCent
             float val = std::min(t1, t0);
             Point3D p = rayStart + val * dir;
             Dir3D norm = (p - sphereCenter).normalized();
-            return Hit(p, norm);
+            return Hit(p, rayStart, rayLine, norm);
         }
         else if (t0 > 0 && t1 < 0) {
             Point3D p = rayStart + t0 * dir;
             Dir3D norm = (p - sphereCenter).normalized();
-            return Hit(p, norm);
+            return Hit(p, rayStart, rayLine, norm);
         }
         else if (t1 > 0 && t0 < 0) {
             Point3D p = rayStart + t1 * dir;
             Dir3D norm = (p - sphereCenter).normalized();
-            return Hit(p, norm);
+            return Hit(p, rayStart, rayLine, norm);
         }
         
     }
@@ -191,8 +193,8 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
     Dir3D norm2 = (p2 - sphereCenter);
 
     if (dot((p1 - rayStart), rayLine.dir()) >= 0 || dot((p2 - rayStart), rayLine.dir()) >= 0) { //are the points in same direction as the ray line?
-        if ((rayStart - p1).magnitude() > (rayStart - p2).magnitude()) return Hit(p2, norm2);
-        return Hit(p1, norm1);    
+        if ((rayStart - p1).magnitude() > (rayStart - p2).magnitude()) return Hit(p2, rayStart, rayLine, norm2);
+        return Hit(p1, rayStart, rayLine, norm1);    
     }
     return Hit();
 }
@@ -241,7 +243,8 @@ Hit findIntersection(Point3D p1, Point3D p2) {
     return closestHit;
 }
 
-Color getLighting(Hit intersection) {
+Color getLighting(Hit intersection, int depth) {
+
     Color totalColor = Color(0, 0, 0);
     for (Light* l : lights) {
         //cout << "light type = " << std::to_string(l->mType) << endl;
@@ -274,7 +277,7 @@ Color getLighting(Hit intersection) {
                 totalColor = totalColor + intersection.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
 
                 Color ks = intersection.mMaterial.mSpecularColor;
-                Dir3D v = (eye - intersection.mPosition).normalized();
+                Dir3D v = (intersection.mRayStartPoint - intersection.mPosition).normalized();
                 Dir3D h = (v + dl->mDirection).normalized();
                 Dir3D n = intersection.mNormal;
                 float p = intersection.mMaterial.mSpecularPower;
@@ -301,7 +304,7 @@ Color getLighting(Hit intersection) {
                 // p: specular coefficient
                 // I: light color
                 Color ks = intersection.mMaterial.mSpecularColor;
-                Dir3D v = (eye - intersection.mPosition).normalized();
+                Dir3D v = (intersection.mRayStartPoint - intersection.mPosition).normalized();
                 Dir3D h = (v + lightDir.normalized()).normalized();
                 Dir3D n = intersection.mNormal;
                 float p = intersection.mMaterial.mSpecularPower;
@@ -311,9 +314,28 @@ Color getLighting(Hit intersection) {
                 totalColor = totalColor + specToAdd;
                 
             }
-        }
-        
+        }        
     }
+    
+    // Add reflection and refraction
+    // pseudocode, delete as complete
+
+    // Ray mirror = Reflect( ray, hit.normal ); DONE
+    // contribution += Kr*EvaluateRayTree( scene, mirror )
+
+    // Plane3D hitPlane = dot(intersection.mPosition, intersection.mNormal);
+    // Line3D refl = sandwhich(hitPlane, intersection.mRay);
+    // float ldotr = std::max(dot(intersection.mRay, refl), 0.0f);
+
+    // Color reflectColor = evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, refl, depth + 1);
+    // // TODO: ldotr is currently acting at Kr
+    // totalColor = totalColor + ldotr * reflectColor;
+
+    // Ray glass = Refract( ray, hit.normal );
+    // contribution += Kt*EvaluateRayTree( scene, glass ); contribution += Ambient(); // superhack!
+    // contribution += Emission( hit ); // for area light sources onl
+    
+    
     //cout << totalColor << endl;
     return totalColor.getTonemapped();
 }

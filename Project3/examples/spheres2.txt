@@ -6,6 +6,8 @@ camera_fwd: 0 .1 -.9
 camera_up:  0 1 0
 camera_fov_ha: 26
 output_image: spheres2.png
+#film_resolution: 600 540
+
 
 #"ground" sphere
 material: .75 .75 .75 .75 .75 .75 .3 .3 .3 32 .2 .2 .2 1.5

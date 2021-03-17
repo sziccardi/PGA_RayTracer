@@ -10,7 +10,7 @@ output_image: bear.png
 #film_resolution: 800 600
 film_resolution: 1024 768
 #film_resolution: 1920 1080
-
+sampling_method: jittered 2
 
 #Light Brown Body "Fur" Material
 material: 0.6 0.38 0.06 0.6 0.38 0.06 0 0 0 20 0 0 0 1.0

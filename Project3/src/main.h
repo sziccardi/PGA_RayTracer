@@ -32,7 +32,8 @@ Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCent
 Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius);
 
 //LIGHTING
-Color getLighting(Hit intersection);
+Color getLighting(Hit intersection, int depth);
+Color evaluateRayTree(Point3D start, Line3D rayLine, int depth);
 
 // Sampling
 float randomPixelLocationNoise(float noiseSize);

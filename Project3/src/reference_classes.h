@@ -106,15 +106,19 @@ struct DirectionalLight : Light {
 struct Hit {
 	bool mIntersected = false;
 	Point3D mPosition = Point3D(-1, -1, -1);
+	Point3D mRayStartPoint = Point3D(0, 0, 0);
+	Line3D mRay = Line3D(-1, -1, -1);
 	Dir3D mNormal = Dir3D(-1, -1, -1);
 	Material mMaterial = Material();
 	int mObjectIter = -1;
-	Hit(Point3D position, Dir3D normal, Material material = Material(), int objectIter = -1) {
+	Hit(Point3D position, Point3D startPosition, Line3D ray, Dir3D normal, Material material = Material(), int objectIter = -1) {
 		mPosition = position;
 		mObjectIter = objectIter;
 		mNormal = normal;
 		mMaterial = material;
 		mIntersected = true;
+		mRayStartPoint = startPosition;
+		mRay = ray;
 	}
 	Hit() {};
 };

@@ -36,7 +36,7 @@ std::vector<Sphere> spheres;
 std::vector<Light*> lights;
 Material currentMaterial = Material(0, 0, 0, 1, 1, 1, 0, 0, 0, 5, 0, 0, 0, 1);
 Color background = Color(0, 0, 0);
-float maxDepth = 5.f;
+float maxDepth = 2.f;
 
 // Sampling
 Sampling sampling = Sampling(NONE);
