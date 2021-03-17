@@ -252,13 +252,14 @@ Color getLighting(Hit hit, Dir3D ray) {
                 float deflectionScaling = dot(hit.mNormal, dl->mDirection.normalized());
                 totalColor = totalColor + hit.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
 
-                /*Color ks = hit.mMaterial.mSpecularColor;
+                Color ks = hit.mMaterial.mSpecularColor;
                 Dir3D v = (eye - hit.mPosition).normalized();
                 Dir3D h = (v + dl->mDirection).normalized();
+                Dir3D r = 2 * dot(hit.mNormal, dl->mDirection.normalized()) * hit.mNormal - dl->mDirection.normalized();
                 Dir3D n = hit.mNormal;
-                float p = hit.mMaterial.mSpecularPower * 4.f;
+                float p = hit.mMaterial.mSpecularPower;
                 Color I = dl->mColor;
-                totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);*/
+                totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(v, r)), p);
             }
         }
         else if (l->mType == POINT) {
@@ -279,15 +280,14 @@ Color getLighting(Hit hit, Dir3D ray) {
                 // n: surface normal
                 // p: specular coefficient
                 // I: light color
-                //Color ks = hit.mMaterial.mSpecularColor;
-                //Dir3D v = (eye - hit.mPosition).normalized();
-                //Dir3D h = (v + lightDir.normalized()).normalized();
-                //Dir3D n = hit.mNormal;
-                //float p = hit.mMaterial.mSpecularPower * 4.f;
-                //Color I = pl->mColor;
-                //Color specToAdd = ks * I * std::pow(std::max(0.f, dot(n, h)), p);
-                ////if (specToAdd.r > 0 && specToAdd.g > 0 && specToAdd.b > 0 ) cout << specToAdd << endl;
-                //totalColor = totalColor + specToAdd;
+                Color ks = hit.mMaterial.mSpecularColor;
+                Dir3D v = (eye - hit.mPosition).normalized();
+                Dir3D h = (v + lightDir.normalized()).normalized();
+                Dir3D r = 2 * dot(hit.mNormal, lightDir.normalized()) * hit.mNormal - lightDir.normalized();
+                Dir3D n = hit.mNormal;
+                float p = hit.mMaterial.mSpecularPower;
+                Color I = pl->mColor;
+                totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(v, r)), p);
                 
             }
         }
