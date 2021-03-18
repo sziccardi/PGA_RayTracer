@@ -35,5 +35,7 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
 Color getLighting(Hit intersection, int depth);
 Color evaluateRayTree(Point3D start, Line3D rayLine, int depth);
 
+Dir3D getRefractedRay(Dir3D d, Dir3D n, float indexOfRefractionN,float indexOfRefractionNT);
+
 // Sampling
 float randomPixelLocationNoise(float noiseSize);

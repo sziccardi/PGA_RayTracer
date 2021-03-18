@@ -383,33 +383,65 @@ Color getLighting(Hit intersection, int depth) {
     // Ray mirror = Reflect( ray, hit.normal ); DONE
     // contribution += Kr*EvaluateRayTree( scene, mirror )
 
-    Line3D fakeLine = Line3D(intersection.mPosition, intersection.mNormal);
+    Line3D fakeLine = vee(intersection.mPosition, intersection.mNormal);
     // std::cout << "fake line: " << std::endl;
     // fakeLine.print();
     Plane3D hitPlane = dot(intersection.mPosition, fakeLine);
     Line3D refl = sandwhich(hitPlane, intersection.mRay);
     float ldotr = std::max(dot(intersection.mRay.dir(), refl.dir()), 0.0f);
-    // intersection.mRay.print();
-    // refl.print();
 
-    // std::cout << "refl scale: " << ldotr << std::endl;
-    // refl.reverseDir();
     Color reflectColor = intersection.mMaterial.mSpecularColor * evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, refl, depth + 1);
+
     // TODO: ldotr is currently acting at Kr
     // TODO: Kr should be the specular color of the material
 
     // std::cout << "reflect color: " << reflectColor.r << ", " << reflectColor.g << ", " << reflectColor.b << std::endl;
     totalColor = totalColor + reflectColor;
 
-    // Ray glass = Refract( ray, hit.normal );
-    // contribution += Kt*EvaluateRayTree( scene, glass ); contribution += Ambient(); // superhack!
-    // contribution += Emission( hit ); // for area light sources onl
     
-    
-    //cout << totalColor << endl;
+    if (intersection.mMaterial.mTransmissiveColor.getIntensity() > 0) {
+        float kr = 1, kg = 1, kb = 1;
+        Color refractedColor = Color(0, 0, 0);
+
+        if (dot(intersection.mRay.dir(), intersection.mNormal) < 0) {
+            // refract, get the refracted line and evaluate ray tree
+            Dir3D refractedVector = getRefractedRay(intersection.mRay.dir(), intersection.mNormal, 1.0f, intersection.mMaterial.mRefractionIndex);
+            // No refraction if it's total internal reflection. Just stop here.
+            if (refractedVector.magnitudeSqr() > 0.05) {
+
+                Line3D rayLine = vee(intersection.mPosition - 0.05f * intersection.mNormal, refractedVector);
+                refractedColor = evaluateRayTree(intersection.mPosition - 0.05f * intersection.mNormal, rayLine, depth + 1);
+            }
+        } else {
+
+            Dir3D refractedVector = getRefractedRay(intersection.mRay.dir(), -1 * intersection.mNormal, intersection.mMaterial.mRefractionIndex, 1.0f);
+            // No refraction if it's total internal reflection. Just stop here.
+            if (refractedVector.magnitudeSqr() > 0.05) {
+                float t = (intersection.mRayStartPoint - intersection.mPosition).magnitude();
+                kr = std::exp(-intersection.mMaterial.mAmbientColor.r * t);
+                kg = std::exp(-intersection.mMaterial.mAmbientColor.g * t);
+                kb = std::exp(-intersection.mMaterial.mAmbientColor.b * t);
+
+                Line3D rayLine = vee(intersection.mPosition + 0.05f * intersection.mNormal, refractedVector);
+                refractedColor = evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, rayLine, depth + 1);
+            }
+        }
+
+        totalColor = totalColor + Color(kr, kg, kb) * intersection.mMaterial.mTransmissiveColor * refractedColor;
+    }
+
     return totalColor.getTonemapped();
 }
 
+Dir3D getRefractedRay(Dir3D d, Dir3D n, float indexOfRefractionN,float indexOfRefractionNT) {
+    float nnt = indexOfRefractionN / indexOfRefractionNT;
+    float underSqrRoot = (1 - (pow(nnt, 2) * (1 - pow(dot(d, n), 2))));
+    if (underSqrRoot < 0) {
+        return Dir3D(0, 0, 0);
+    }
+
+    return ((nnt * (d - n * (dot(d, n)))) - n * sqrt(underSqrRoot)).normalized();
+}
 
 // https://stackoverflow.com/questions/13408990/how-to-generate-random-float-number-in-c
 float randomPixelLocationNoise(float noiseSize) {

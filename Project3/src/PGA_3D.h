@@ -216,7 +216,7 @@ struct Line3D{
 
   Line3D(float x=0, float y=0, float z=0, float mx=0, float my=0, float mz=0): x(x), y(y), z(z), mx(mx), my(my), mz(mz)  {}
   
-  Line3D(Point3D position, Dir3D direction): x(position.x), y(position.y), z(position.z), mx(direction.x), my(direction.y), mz(direction.z)  {}
+  // Line3D(Point3D position, Dir3D direction): x(position.x), y(position.y), z(position.z), mx(direction.x), my(direction.y), mz(direction.z)  {}
 
   Line3D(MultiVector mv) : mx(mv.wx), my(mv.wy), mz(mv.wz), x(mv.yz), y(mv.zx), z(mv.xy) {}
 

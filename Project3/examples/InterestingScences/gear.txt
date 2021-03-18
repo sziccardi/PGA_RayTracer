@@ -7,8 +7,8 @@ camera_fwd: 0.26 0.78 .45
 camera_up: 0 1 0 
 camera_fov_ha: 12
 output_image: gear.png
-#film_resolution: 200 200
-film_resolution: 800 600
+film_resolution: 200 200
+#film_resolution: 800 600
 #film_resolution: 1024 768
 #film_resolution: 1920 1080
 
