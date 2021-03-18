@@ -188,10 +188,8 @@ struct Hit {
 	Point3D mPosition = Point3D(-1, -1, -1);
 	Dir3D mNormal = Dir3D(-1, -1, -1);
 	Material mMaterial = Material();
-	int mObjectIter = -1;
 	Hit(Point3D position, Dir3D normal, Material material = Material(), int objectIter = -1) {
 		mPosition = position;
-		mObjectIter = objectIter;
 		mNormal = normal;
 		mMaterial = material;
 		mIntersected = true;
@@ -201,8 +199,7 @@ struct Hit {
 	bool operator==(Hit toCompare) {
 		if (mIntersected == toCompare.mIntersected &&
 			mNormal == toCompare.mNormal &&
-			mMaterial == toCompare.mMaterial &&
-			mObjectIter == toCompare.mObjectIter
+			mMaterial == toCompare.mMaterial
 			) return true;
 		return false;
 	}

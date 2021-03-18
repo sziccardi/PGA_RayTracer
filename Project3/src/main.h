@@ -32,12 +32,15 @@ Hit raySphereIntersect_fast(Point3D rayStart, Line3D rayLine, Point3D sphereCent
 Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, float sphereRadius);
 
 Hit rayTriIntersect(Point3D rayStart, Line3D rayLine, Triangle tri);
+Hit rayTriIntersect(Point3D rayStart, Point3D rayEnd, Triangle tri);
 Coord3D getBarycentricCoord(Point3D p, Triangle tri);
 
 
 //LIGHTING
 int mCurrentDepth = 0;
-Color getLighting(Hit hit, Dir3D ray);
+Dir3D getReflectRay(Hit hit, Dir3D ray);
+Dir3D getRefrectRay(Dir3D normal, Dir3D ray, float n);
+Color getLighting(Hit hit, Point3D rayStart, Dir3D ray);
 Color evaluateRayTree(Point3D rayStart, Dir3D ray);
 
 // Sampling

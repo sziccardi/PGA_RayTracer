@@ -749,7 +749,7 @@ void parseSceneFile(std::string fileName){
                found = line.find(command);
                if (found != std::string::npos) {
                    if (maxVerts > 0) {
-                       //cout << "new vert pos = (";
+                       cout << "new vert pos = (";
                        iter = found + command.length();
                        std::string subString = line.substr(iter);
                        int start = subString.find_first_not_of(" \t\r\n");
@@ -757,7 +757,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringX = subString.substr(start);
                        if (end >= 0) stringX = subString.substr(start, start + end);
                        float x = std::stof(stringX);
-                       //cout << std::to_string(x) << ", ";
+                       cout << std::to_string(x) << ", ";
 
                        subString = subString.substr(end + start);
                        start = subString.find_first_not_of(" \t\r\n");
@@ -765,7 +765,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringY = subString.substr(start);
                        if (end >= 0) stringY = subString.substr(start, start + end);
                        float y = std::stof(stringY);
-                       //cout << std::to_string(y) << ", ";
+                       cout << std::to_string(y) << ", ";
 
                        subString = subString.substr(end + start);
                        start = subString.find_first_not_of(" \t\r\n");
@@ -773,7 +773,7 @@ void parseSceneFile(std::string fileName){
                        std::string stringZ = subString.substr(start);
                        if (end >= 0) stringZ = subString.substr(start, start + end);
                        float z = std::stof(stringZ);
-                       //cout << std::to_string(z) << ") " << endl;
+                       cout << std::to_string(z) << ") " << endl;
 
                        verts.push_back(Vertex(Point3D(x, y, z)));
                    }
@@ -822,7 +822,7 @@ void parseSceneFile(std::string fileName){
                command = "triangle:";
                found = line.find(command);
                if (found != std::string::npos) {
-                    //cout << "new triangle with verts = (";
+                    cout << "new triangle with verts = (";
                     iter = found + command.length();
                     std::string subString = line.substr(iter);
                     int start = subString.find_first_not_of(" \t\r\n");
@@ -830,7 +830,7 @@ void parseSceneFile(std::string fileName){
                     std::string stringI = subString.substr(start);
                     if (end >= 0) stringI = subString.substr(start, start + end);
                     int i = std::stoi(stringI);
-                    //cout << std::to_string(i) << ", ";
+                    cout << std::to_string(i) << ", ";
 
                     subString = subString.substr(end + start);
                     start = subString.find_first_not_of(" \t\r\n");
@@ -838,7 +838,7 @@ void parseSceneFile(std::string fileName){
                     std::string stringJ = subString.substr(start);
                     if (end >= 0) stringJ = subString.substr(start, start + end);
                     int j = std::stoi(stringJ);
-                    //cout << std::to_string(j) << ", ";
+                    cout << std::to_string(j) << ", ";
 
                     subString = subString.substr(end + start);
                     start = subString.find_first_not_of(" \t\r\n");
@@ -846,13 +846,13 @@ void parseSceneFile(std::string fileName){
                     std::string stringK = subString.substr(start);
                     if (end >= 0) stringK = subString.substr(start, start + end);
                     int k = std::stoi(stringK);
-                    //cout << std::to_string(k) << ") " << endl;
+                    cout << std::to_string(k) << ") " << endl;
 
                     Point3D avgPos = (verts[i].mPosition + verts[j].mPosition + verts[k].mPosition) / 3.f;
 
                     Dir3D edge1 = verts[j].mPosition - verts[i].mPosition;
                     Dir3D edge2 = verts[k].mPosition - verts[i].mPosition;
-                    Dir3D norm = cross(edge1, edge2).normalized();
+                    Dir3D norm = cross(edge2, edge1).normalized();
 
                     tris.push_back(Triangle(i, j, k, avgPos, norm, currentMaterial));
                }
@@ -916,7 +916,7 @@ void parseSceneFile(std::string fileName){
 
                    Dir3D edge1 = verts[j].mPosition - verts[i].mPosition;
                    Dir3D edge2 = verts[k].mPosition - verts[i].mPosition;
-                   Dir3D norm = cross(edge1, edge2).normalized();
+                   Dir3D norm = cross(edge2, edge1).normalized();
                    tris.push_back(Triangle(i, j, k, norm, l, m, n, avgPos, currentMaterial));
                }
            }
@@ -924,8 +924,14 @@ void parseSceneFile(std::string fileName){
         myFile.close();
     } else cout << "Unable to open file";
 
+    if (lights.empty()) {
+        lights.push_back(new Light(Color(1, 1, 1)));
+    }
+
     printf("found %d lights\n", lights.size());
     printf("found %d spheres\n", spheres.size());
+    printf("found %d vertices\n", verts.size());
+    printf("found %d triangles\n", tris.size());
   printf("Orthagonal Camera Basis:\n");
   right = cross(up, forward);
   

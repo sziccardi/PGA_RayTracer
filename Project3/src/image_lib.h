@@ -52,6 +52,30 @@ inline Color operator*(Color c1, Color c2) {
 inline Color operator+(Color c1, Color c2) {
     return Color(c1.r + c2.r, c1.g + c2.g, c1.b + c2.b);
 }
+inline bool operator>(Color c1, Color c2) {
+    return (c1.r > c2.r && c1.g > c2.g && c1.b > c2.b);
+}
+inline bool operator>=(Color c1, Color c2) {
+    return (c1.r >= c2.r && c1.g >= c2.g && c1.b >= c2.b);
+}
+inline bool operator<(Color c1, Color c2) {
+    return (c1.r < c2.r && c1.g < c2.g && c1.b < c2.b);
+}
+inline bool operator<=(Color c1, Color c2) {
+    return (c1.r <= c2.r && c1.g <= c2.g && c1.b <= c2.b);
+}
+inline bool operator>(Color c1, float s) {
+    return (c1.r > s && c1.g > s && c1.b > s);
+}
+inline bool operator>=(Color c1, float s) {
+    return (c1.r >= s && c1.g >= s && c1.b >= s);
+}
+inline bool operator<(Color c1, float s) {
+    return (c1.r < s && c1.g < s && c1.b < s);
+}
+inline bool operator<=(Color c1, float s) {
+    return (c1.r <= s && c1.g <= s && c1.b <= s);
+}
 
 std::ostream& operator<<(std::ostream& os, const Color& mv) {
     return os << std::string(mv);
