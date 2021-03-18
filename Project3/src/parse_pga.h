@@ -540,7 +540,7 @@ void parseSceneFile(std::string fileName){
                    float z = std::stof(stringZ);
                    //cout << std::to_string(z) << ") " << endl;
 
-                   lights.push_back(new DirectionalLight(Color(r, g, b), Dir3D(x, y, z)));
+                   lights.push_back(new DirectionalLight(Color(r, g, b), Dir3D(-x, -y, -z)));
                }
 
                command = "spot_light:";

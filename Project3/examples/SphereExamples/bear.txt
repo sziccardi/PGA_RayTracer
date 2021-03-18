@@ -2,8 +2,8 @@
 #Model by Moses Adeagbo
 
 #Camera Set-up
-camera_pos: -1.5 6.1 5.5
-camera_fwd: -.3 .75 1.1
+camera_pos: 1.5 4.1 5.5
+camera_fwd: .3 .4 1.1
 camera_up:  0 1 0
 camera_fov_ha: 25
 output_image: bear.png
@@ -16,7 +16,7 @@ film_resolution: 1024 768
 material: 0.6 0.38 0.06 0.6 0.38 0.06 0 0 0 20 0 0 0 1.0
 
 #head
-sphere: 0 3.27 -0.224 1.12 
+sphere: 0 3.27 -0.224 1.12 #0 3.27 -0.224 1.1
 
 #body 
 sphere: 0 1.241 -0.224 1.281

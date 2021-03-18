@@ -213,22 +213,8 @@ Hit rayTriIntersect(Point3D rayStart, Point3D rayEnd, Triangle tri) {
 
 Hit findIntersection(Point3D rayStart, Line3D rayLine) {
     Hit closestHit = Hit();
-    float currMinDist = 10000000000;
-    int i = 0;
-    for (Sphere s : spheres) {
-        Hit tempHit = raySphereIntersect_fast(rayStart, rayLine, s.mCenter, s.mRadius);
-        if (tempHit.mIntersected) {
-            float tempDist = (tempHit.mPosition - rayStart).magnitude();
-            if (tempDist < currMinDist) {
-                currMinDist = tempDist;
-                tempHit.mMaterial = s.mMaterial;
-                closestHit = tempHit;
-            }
-        }
-        i++;
-    }
-
-    i = 0;
+    float currMinDist = 10000000000000;
+    
     for (Triangle tri : tris) {
         Hit tempHit = rayTriIntersect(rayStart, rayLine, tri);
         if (tempHit.mIntersected) {
@@ -240,8 +226,21 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
                 //cout << "hit at " << tempHit.mPosition << endl;
             }
         }
-        i++;
     }
+    
+    for (Sphere s : spheres) {
+        Hit tempHit = raySphereIntersect_fast(rayStart, rayLine, s.mCenter, s.mRadius);
+        if (tempHit.mIntersected) {
+            float tempDist = (tempHit.mPosition - rayStart).magnitude();
+            if (tempDist < currMinDist) {
+                currMinDist = tempDist;
+                tempHit.mMaterial = s.mMaterial;
+                closestHit = tempHit;
+            }
+        }
+    }
+
+    
     
     return closestHit;
 }
@@ -249,10 +248,23 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
 Hit findIntersection(Point3D p1, Point3D p2) {
     Hit closestHit = Hit();
     float currMinDist = 10000000000;
+
+    for (Triangle tri : tris) {
+        Hit tempHit = rayTriIntersect(p1, p2, tri);
+        if (tempHit.mIntersected) {
+            float tempDist = tempHit.mPosition.distToSqr(p1);
+            if (tempDist < currMinDist) {
+                currMinDist = tempDist;
+                tempHit.mMaterial = tri.mMaterial;
+                closestHit = tempHit;
+            }
+        }
+    }
+
     for (Sphere s : spheres) {
         Hit tempHit = lineSegmentSphereIntersect_fast(p1, p2, s.mCenter, s.mRadius);
         if (tempHit.mIntersected) {
-            float tempDist = (tempHit.mPosition - p1).magnitude();
+            float tempDist = tempHit.mPosition.distToSqr(p1);
             if (tempDist < currMinDist) {
                 currMinDist = tempDist;
                 tempHit.mMaterial = s.mMaterial;
@@ -262,17 +274,6 @@ Hit findIntersection(Point3D p1, Point3D p2) {
     }
 
 
-    for (Triangle tri : tris) {
-        Hit tempHit = rayTriIntersect(p1, p2, tri);
-        if (tempHit.mIntersected) {
-            float tempDist = (tempHit.mPosition - p1).magnitude();
-            if (tempDist < currMinDist) {
-                currMinDist = tempDist;
-                tempHit.mMaterial = tri.mMaterial;
-                closestHit = tempHit;
-            }
-        }
-    }
     return closestHit;
 }
 
@@ -300,7 +301,7 @@ Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
             totalColor = totalColor + myMult; 
         } else if (l->mType == SPOT) {
             SpotLight* sl = (SpotLight*)(l); 
-            Hit lightIntersect = findIntersection((hit.mPosition + hit.mNormal * 0.05f), sl->mPosition);
+            Hit lightIntersect = findIntersection((hit.mPosition + hit.mNormal * 0.005f), sl->mPosition);
             if (!lightIntersect.mIntersected) {
                 Dir3D lightToSphere = (hit.mPosition) - sl->mPosition;
                 float angleToLight = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
@@ -309,12 +310,20 @@ Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
                 float coefficient = 1.f / dist;
                 if (angleToLight <= sl->mMinAngle) {
                     totalColor = totalColor + coefficient * hit.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+                    Color ks = hit.mMaterial.mSpecularColor;
+                    Dir3D v = (eye - hit.mPosition).normalized();
+                    Dir3D h = (v + sl->mDirection.normalized()).normalized();
+                    Dir3D r = 2 * dot(hit.mNormal, sl->mDirection.normalized()) * hit.mNormal - sl->mDirection.normalized();
+                    Dir3D n = hit.mNormal;
+                    float p = hit.mMaterial.mSpecularPower;
+                    Color I = sl->mColor;
+                    totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(n, h)), p);
                 }
                 else if (angleToLight > sl->mMinAngle && angleToLight < sl->mMaxAngle) {
                     float range = (sl->mMaxAngle - sl->mMinAngle);
                     float diff = angleToLight - sl->mMinAngle;
                     float intensity = 1 - diff / range;
-                    totalColor = Color(intensity, 0, 0);//totalColor + coefficient * intensity * hit.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+                    totalColor = totalColor + coefficient * intensity * hit.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
                 }
             }
         }
