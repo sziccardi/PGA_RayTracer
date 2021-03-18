@@ -40,6 +40,11 @@ float maxDepth = 5.f;
 
 // Sampling
 Sampling sampling = Sampling(NONE);
+std::vector<Point3D> vertices;
+std::vector<Triangle> triangles;
+std::vector<Dir3D> normals;
+int maxVertices = 10000;
+int maxNormals = 10000;
 
 
 void resetScene() {
@@ -115,6 +120,168 @@ void parseSceneFile(std::string fileName){
                    cout << "r = " << std::to_string(r) << endl;
 
                    spheres.push_back(Sphere(currentMaterial, Point3D(x, y, z), r));
+               }
+
+               command = "vertex:";
+               found = line.find(command);
+               if (found != std::string::npos) {
+                    if (vertices.size() < maxVertices) {
+                        cout << "new vertex = (";
+                        iter = found + command.length();
+                        std::string subString = line.substr(iter);
+                        int start = subString.find_first_not_of(" \t\r\n");
+                        int end = subString.substr(start).find_first_of(" \t\r\n");
+                        std::string stringX = subString.substr(start);
+                        if (end >= 0) stringX = subString.substr(start, start + end);
+                        float x = std::stof(stringX);
+                        cout << std::to_string(x) << ", ";
+
+                        subString = subString.substr(end + start);
+                        start = subString.find_first_not_of(" \t\r\n");
+                        end = subString.substr(start).find_first_of(" \t\r\n");
+                        std::string stringY = subString.substr(start);
+                        if (end >= 0) stringY = subString.substr(start, start + end);
+                        float y = std::stof(stringY);
+                        cout << std::to_string(y) << ", ";
+
+                        subString = subString.substr(end + start);
+                        start = subString.find_first_not_of(" \t\r\n");
+                        end = subString.substr(start).find_first_of(" \t\r\n");
+                        std::string stringZ = subString.substr(start);
+                        if (end >= 0) stringZ = subString.substr(start, start + end);
+                        float z = std::stof(stringZ);
+                        cout << std::to_string(z) << ") " << std::endl;
+
+                        vertices.push_back(Point3D(x, y, z));
+                   }
+               }
+
+               command = "normal:";
+               found = line.find(command);
+               if (found != std::string::npos) {
+                    if (normals.size() < maxNormals) {
+                        cout << "new normal = (";
+                        iter = found + command.length();
+                        std::string subString = line.substr(iter);
+                        int start = subString.find_first_not_of(" \t\r\n");
+                        int end = subString.substr(start).find_first_of(" \t\r\n");
+                        std::string stringX = subString.substr(start);
+                        if (end >= 0) stringX = subString.substr(start, start + end);
+                        float x = std::stof(stringX);
+                        cout << std::to_string(x) << ", ";
+
+                        subString = subString.substr(end + start);
+                        start = subString.find_first_not_of(" \t\r\n");
+                        end = subString.substr(start).find_first_of(" \t\r\n");
+                        std::string stringY = subString.substr(start);
+                        if (end >= 0) stringY = subString.substr(start, start + end);
+                        float y = std::stof(stringY);
+                        cout << std::to_string(y) << ", ";
+
+                        subString = subString.substr(end + start);
+                        start = subString.find_first_not_of(" \t\r\n");
+                        end = subString.substr(start).find_first_of(" \t\r\n");
+                        std::string stringZ = subString.substr(start);
+                        if (end >= 0) stringZ = subString.substr(start, start + end);
+                        float z = std::stof(stringZ);
+                        cout << std::to_string(z) << ") " << std::endl;
+
+                        normals.push_back(Dir3D(x, y, z));
+                   }
+               }
+
+               command = "normal_triangle:";
+               found = line.find(command);
+               if (found != std::string::npos) {
+                   cout << "new directional light " << endl;
+                   cout << "color = (";
+                   iter = found + command.length();
+                   std::string subString = line.substr(iter);
+                   int start = subString.find_first_not_of(" \t\r\n");
+                   int end = subString.substr(start).find_first_of(" \t\r\n");
+                   std::string stringR = subString.substr(start);
+                   if (end >= 0) stringR = subString.substr(start, start + end);
+                   float r = std::stof(stringR);
+                   cout << std::to_string(r) << ", ";
+
+                   subString = subString.substr(end + start);
+                   start = subString.find_first_not_of(" \t\r\n");
+                   end = subString.substr(start).find_first_of(" \t\r\n");
+                   std::string stringG = subString.substr(start);
+                   if (end >= 0) stringG = subString.substr(start, start + end);
+                   float g = std::stof(stringG);
+                   cout << std::to_string(g) << ", ";
+
+                   subString = subString.substr(end + start);
+                   start = subString.find_first_not_of(" \t\r\n");
+                   end = subString.substr(start).find_first_of(" \t\r\n");
+                   std::string stringB = subString.substr(start);
+                   if (end >= 0) stringB = subString.substr(start, start + end);
+                   float b = std::stof(stringB);
+                   cout << std::to_string(b) << ") " << endl;
+
+                   cout << "direction = ( ";
+                   subString = subString.substr(end + start);
+                   start = subString.find_first_not_of(" \t\r\n");
+                   end = subString.substr(start).find_first_of(" \t\r\n");
+                   std::string stringX = subString.substr(start);
+                   if (end >= 0) stringX = subString.substr(start, start + end);
+                   float x = std::stof(stringX);
+                   cout << std::to_string(x) << ", ";
+
+                   subString = subString.substr(end + start);
+                   start = subString.find_first_not_of(" \t\r\n");
+                   end = subString.substr(start).find_first_of(" \t\r\n");
+                   std::string stringY = subString.substr(start);
+                   if (end >= 0) stringY = subString.substr(start, start + end);
+                   float y = std::stof(stringY);
+                   cout << std::to_string(y) << ", ";
+
+                   subString = subString.substr(end + start);
+                   start = subString.find_first_not_of(" \t\r\n");
+                   end = subString.substr(start).find_first_of(" \t\r\n");
+                   std::string stringZ = subString.substr(start);
+                   if (end >= 0) stringZ = subString.substr(start, start + end);
+                   float z = std::stof(stringZ);
+                   cout << std::to_string(z) << ") " << endl;
+
+                   triangles.push_back(NormalTriangle(currentMaterial, vertices[r], vertices[g], vertices[b], normals[x], normals[y], normals[z]));
+               } else {
+                //    If we find a normal triangle on a line, we don't want to also find a triangle
+                    command = "triangle:";
+                    found = line.find(command);
+                    if (found != std::string::npos) {
+                            if (triangles.size() < maxNormals) {
+                                cout << "new vertex = (";
+                                iter = found + command.length();
+                                std::string subString = line.substr(iter);
+                                int start = subString.find_first_not_of(" \t\r\n");
+                                int end = subString.substr(start).find_first_of(" \t\r\n");
+                                std::string stringX = subString.substr(start);
+                                if (end >= 0) stringX = subString.substr(start, start + end);
+                                int x = std::atoi(stringX.c_str());
+                                cout << std::to_string(x) << ", ";
+
+                                subString = subString.substr(end + start);
+                                start = subString.find_first_not_of(" \t\r\n");
+                                end = subString.substr(start).find_first_of(" \t\r\n");
+                                std::string stringY = subString.substr(start);
+                                if (end >= 0) stringY = subString.substr(start, start + end);
+                                int y = std::atoi(stringY.c_str());
+                                cout << std::to_string(y) << ", ";
+
+                                subString = subString.substr(end + start);
+                                start = subString.find_first_not_of(" \t\r\n");
+                                end = subString.substr(start).find_first_of(" \t\r\n");
+                                std::string stringZ = subString.substr(start);
+                                if (end >= 0) stringZ = subString.substr(start, start + end);
+                                int z = std::atoi(stringZ.c_str());
+                                cout << std::to_string(z) << ") " << std::endl;
+
+                                triangles.push_back(Triangle(currentMaterial, vertices[x], vertices[y], vertices[z]));
+                        }
+                    }
+
                }
 
                command = "film_resolution:";
@@ -252,6 +419,38 @@ void parseSceneFile(std::string fileName){
                    cout << std::to_string(ha) << endl;
 
                    halfAngleVFOV = ha;
+               }
+
+               command = "max_vertices:";
+               found = line.find(command);
+               if (found != std::string::npos) {
+                   cout << "max vertices = ";
+                   iter = found + command.length();
+                   std::string subString = line.substr(iter);
+                   int start = subString.find_first_not_of(" \t\r\n");
+                   int end = subString.substr(start).find_first_of(" \t\r\n");
+                   std::string stringFOV = subString.substr(start);
+                   if (end >= 0) stringFOV = subString.substr(start, start + end);
+                   int maxVerts = std::atoi(stringFOV.c_str());
+                   cout << std::to_string(maxVerts) << endl;
+
+                   maxVertices = maxVerts;
+               }
+
+               command = "max_normals:";
+               found = line.find(command);
+               if (found != std::string::npos) {
+                   cout << "max normals = ";
+                   iter = found + command.length();
+                   std::string subString = line.substr(iter);
+                   int start = subString.find_first_not_of(" \t\r\n");
+                   int end = subString.substr(start).find_first_of(" \t\r\n");
+                   std::string stringFOV = subString.substr(start);
+                   if (end >= 0) stringFOV = subString.substr(start, start + end);
+                   int maxNorms = std::atoi(stringFOV.c_str());
+                   cout << std::to_string(maxNorms) << endl;
+
+                   maxNormals = maxNorms;
                }
 
                command = "background:";

@@ -23,7 +23,9 @@ int main(int argc, char** argv) {
     Image outputImg = Image(img_width, img_height);
     auto t_start = std::chrono::high_resolution_clock::now();
 
+    #pragma omp parallel for
     for (int i = 0 / 2; i < img_width; i++) {
+        #pragma omp parallel for
         for (int j = 0 / 2; j < img_height; j++) {
 
             if (sampling.mType == JITTERED) {
@@ -217,6 +219,25 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
         }
         i++;
     }
+
+    for (Triangle t : triangles) {
+        Plane3D triPlane = t.getPlane();
+        Point3D hitPoint = Point3D(wedge(rayLine, triPlane));
+        
+        if (t.pointInside(hitPoint)) {
+            // std::cout << "I'M INSIDE" << std::endl;
+            float tempDist = (hitPoint - rayStart).magnitude();
+            if (dot((hitPoint - rayStart), rayLine.dir()) >= 0 || dot((hitPoint - rayStart), rayLine.dir()) >= 0) {
+                // hitPoint.print();
+
+                if (tempDist < currMinDist && tempDist > 0.01f) {
+                    currMinDist = tempDist;
+                    closestHit = Hit(hitPoint, rayStart, rayLine, t.getNormal(hitPoint, rayLine.dir()), t.mMaterial, i);
+                }
+            }
+        }
+        i++;
+    }
     
     return closestHit;
 }
@@ -235,6 +256,29 @@ Hit findIntersection(Point3D p1, Point3D p2) {
                 tempHit.mObjectIter = i;
                 tempHit.mMaterial = s.mMaterial;
                 closestHit = tempHit;
+            }
+        }
+        i++;
+    }
+
+    Line3D rayLine = vee(p1, p2);
+    for (Triangle t : triangles) {
+        Plane3D triPlane = t.getPlane();
+        Point3D hitPoint = Point3D(wedge(rayLine, triPlane));
+
+
+        //are the points in same direction as the ray line?
+        
+        if (t.pointInside(hitPoint)) {
+            if (dot((hitPoint - p1), rayLine.dir()) >= 0 || dot((hitPoint - p2), rayLine.dir()) >= 0) {
+
+                // hitPoint.print();
+                // std::cout << "I'M INSIDE" << std::endl;
+                float tempDist = (hitPoint - p1).magnitude();
+                if (tempDist < currMinDist && tempDist > 0.01f) {
+                    currMinDist = tempDist;
+                    closestHit = Hit(hitPoint, p1, rayLine, t.getNormal(hitPoint, rayLine.dir()), t.mMaterial, i);
+                }
             }
         }
         i++;
@@ -260,12 +304,28 @@ Color getLighting(Hit intersection, int depth) {
                 float deflectionScaling = dot(intersection.mNormal, -1.f * sl->mDirection.normalized());
                 if (angleToLight <= sl->mMinAngle) {
                     totalColor = totalColor + intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+
+                    Color ks = intersection.mMaterial.mSpecularColor;
+                    Dir3D v = (intersection.mRayStartPoint - intersection.mPosition).normalized();
+                    Dir3D h = (v + sl->mDirection).normalized();
+                    Dir3D n = intersection.mNormal;
+                    float p = intersection.mMaterial.mSpecularPower;
+                    Color I = sl->mColor;
+                    totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);
                 }
                 else if (angleToLight > sl->mMinAngle && angleToLight < sl->mMaxAngle) {
                     float range = (sl->mMaxAngle - sl->mMinAngle);
                     float diff = angleToLight - sl->mMinAngle;
                     float intensity = 1 - diff / range;
                     totalColor = totalColor + intensity * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+
+                    Color ks = intersection.mMaterial.mSpecularColor;
+                    Dir3D v = (intersection.mRayStartPoint - intersection.mPosition).normalized();
+                    Dir3D h = (v + sl->mDirection).normalized();
+                    Dir3D n = intersection.mNormal;
+                    float p = intersection.mMaterial.mSpecularPower;
+                    Color I = sl->mColor;
+                    totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);
                 }
             }
         }
@@ -323,17 +383,22 @@ Color getLighting(Hit intersection, int depth) {
     // Ray mirror = Reflect( ray, hit.normal ); DONE
     // contribution += Kr*EvaluateRayTree( scene, mirror )
 
-    Plane3D hitPlane = dot(intersection.mPosition, (Line3D) intersection.mNormal);
-    intersection.mRay.print();
-    Line3D refl = sandwhich(hitPlane, intersection.mRay * -1);
+    Line3D fakeLine = Line3D(intersection.mPosition, intersection.mNormal);
+    // std::cout << "fake line: " << std::endl;
+    // fakeLine.print();
+    Plane3D hitPlane = dot(intersection.mPosition, fakeLine);
+    Line3D refl = sandwhich(hitPlane, intersection.mRay);
     float ldotr = std::max(dot(intersection.mRay.dir(), refl.dir()), 0.0f);
+    // intersection.mRay.print();
+    // refl.print();
 
-    std::cout << "refl scale: " << ldotr << std::endl;
+    // std::cout << "refl scale: " << ldotr << std::endl;
+    // refl.reverseDir();
     Color reflectColor = intersection.mMaterial.mSpecularColor * evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, refl, depth + 1);
     // TODO: ldotr is currently acting at Kr
     // TODO: Kr should be the specular color of the material
 
-    std::cout << "reflect color: " << reflectColor.r << ", " << reflectColor.g << ", " << reflectColor.b << std::endl;
+    // std::cout << "reflect color: " << reflectColor.r << ", " << reflectColor.g << ", " << reflectColor.b << std::endl;
     totalColor = totalColor + reflectColor;
 
     // Ray glass = Refract( ray, hit.normal );

@@ -92,42 +92,6 @@ struct IdealLine3D{
 
 };
 
-struct Line3D{
-  float x,y,z,mx,my,mz;
-
-  Line3D(float x=0, float y=0, float z=0, float mx=0, float my=0, float mz=0): x(x), y(y), z(z), mx(mx), my(my), mz(mz)  {}
-
-  Line3D(MultiVector mv) : mx(mv.wx), my(mv.wy), mz(mv.wz), x(mv.yz), y(mv.zx), z(mv.xy) {}
-
-  operator MultiVector(){ return MultiVector(0,0,0,0,0,mx,my,mz,z,y,x,0,0,0,0,0); }
-
-  Dir3D dir();
-
-  float magnitude(){
-    return sqrt(x*x+y*y+z*z);
-  }
-
-  float magnitudeSqr(){
-    return x*x+y*y+z*z;
-  }
-
-  Line3D normalized(){
-    float mag = magnitude();
-    return Line3D(x/mag, y/mag, z/mag, mx/mag, my/mag, mz/mag);
-  }
-
-  operator std::string() const {
-    char result[200];
-    sprintf(result, "Direction (%.2fx,%.2fy,%.2fz),  Moment: (%.2fx,%.2fy,%.2fz)", x, y, z, mx, my, mz);
-    return result;
-  }
-
-  void print(const char* title=""){
-    printf("%s - %s\n",title, std::string(*this).c_str());
-  }
-
-};
-
 //Points and Displacements
 //-------------------
 struct Point3D{
@@ -168,7 +132,6 @@ struct Point3D{
   void print(const char* title=""){
     printf("%s - %s\n",title, std::string(*this).c_str());
   }
-  
 };
 
 struct Dir3D{
@@ -246,6 +209,50 @@ struct HomogeneousPoint3D{
   void print(const char* title=""){
     printf("%s - %s\n",title, std::string(*this).c_str());
   }
+};
+
+struct Line3D{
+  float x,y,z,mx,my,mz;
+
+  Line3D(float x=0, float y=0, float z=0, float mx=0, float my=0, float mz=0): x(x), y(y), z(z), mx(mx), my(my), mz(mz)  {}
+  
+  Line3D(Point3D position, Dir3D direction): x(position.x), y(position.y), z(position.z), mx(direction.x), my(direction.y), mz(direction.z)  {}
+
+  Line3D(MultiVector mv) : mx(mv.wx), my(mv.wy), mz(mv.wz), x(mv.yz), y(mv.zx), z(mv.xy) {}
+
+  operator MultiVector(){ return MultiVector(0,0,0,0,0,mx,my,mz,z,y,x,0,0,0,0,0); }
+
+  Dir3D dir();
+
+  float magnitude(){
+    return sqrt(x*x+y*y+z*z);
+  }
+
+  float magnitudeSqr(){
+    return x*x+y*y+z*z;
+  }
+
+  Line3D normalized(){
+    float mag = magnitude();
+    return Line3D(x/mag, y/mag, z/mag, mx/mag, my/mag, mz/mag);
+  }
+
+  operator std::string() const {
+    char result[200];
+    sprintf(result, "Direction (%.2fx,%.2fy,%.2fz),  Moment: (%.2fx,%.2fy,%.2fz)", x, y, z, mx, my, mz);
+    return result;
+  }
+
+  void print(const char* title=""){
+    printf("%s - %s\n",title, std::string(*this).c_str());
+  }
+
+  void reverseDir() {
+    mx *= -1;
+    my *= -1;
+    mz *= -1;
+  }
+
 };
 
 //Motors
@@ -336,6 +343,10 @@ inline Dir3D Point3D::operator-(Point3D rhs){
   return Dir3D(x-rhs.x,y-rhs.y,z-rhs.z);
 }
 
+inline Point3D operator/(Point3D p1, Point3D p2){
+  return Point3D(p1.x / p2.x, p1.y / p2.y, p1.z / p2.z);
+}
+
 inline Point3D Point3D::operator+(Dir3D rhs){
   return Point3D(x+rhs.x,y+rhs.y,z+rhs.z);
 }
@@ -377,7 +388,7 @@ inline HomogeneousPoint3D HomogeneousPoint3D::operator+(HomogeneousPoint3D rhs){
 }
 
 //Operations on Lines
-Dir3D Line3D::dir(){
+inline Dir3D Line3D::dir(){
   return Dir3D(x,y,z);
 }
 
@@ -411,6 +422,13 @@ inline HomogeneousPoint3D wedge(Plane3D lhs, Line3D rhs){
 
 // Times
 
+	inline MultiVector operator*(Plane3D p, MultiVector m){		
+  return MultiVector(p)*m;		
+}		
+inline MultiVector operator*(MultiVector m,Plane3D p){		
+  return m*MultiVector(p);		
+}
+
 inline MultiVector operator*(Plane3D p, Line3D l){
     float w = - p.x*l.mx - p.y*l.my - p.z*l.mz;
     float x = - p.y*l.z + p.z*l.y;
@@ -423,6 +441,17 @@ inline MultiVector operator*(Plane3D p, Line3D l){
     return MultiVector(0, w, x, y, z, 0, 0, 0, 0, 0, 0, wyx, wxz, wzy, xyz, 0);
 }
 
+	inline MultiVector operator*(Line3D l,Plane3D p){ //lp = -pl		
+    float w = - p.x*l.mx - p.y*l.my - p.z*l.mz;		
+    float x = - p.y*l.z + p.z*l.y;		
+    float y = p.x*l.z - p.z*l.x;		
+    float z = - p.x*l.y + p.y*l.x;		
+    float wyx = -p.w*l.z + p.x*l.my - p.y*l.mx;		
+    float wxz = -p.w*l.y - p.x*l.mz + p.z*l.mx;		
+    float wzy = -p.w*l.x + p.y*l.mz - p.z*l.my;		
+    float xyz = p.x*l.x + p.y*l.y + p.z*l.z;		
+    return MultiVector(0, -w, -x, -y, -z, 0, 0, 0, 0, 0, 0, -wyx, -wxz, -wzy, -xyz, 0);		
+}
 
 //Compute -plp
 inline MultiVector sandwhich(Plane3D p, Line3D l){
@@ -486,9 +515,9 @@ inline Plane3D vee(Point3D a, Point3D b, Point3D c){
   float wyx = - wx*c.y + wy*c.x - xy;
   float wxz = + wx*c.z - wz*c.x - zx;
   float wzy = - wy*c.z + wz*c.y - yz;
-  float xyz = + xy*c.z + zx*c.y + yz;
+  float xyz = + xy*c.z + zx*c.y + yz*c.x;
 
-  return Plane3D(wzy,wxz,wyx,xyz); //Return dual as it's a vee operation
+  return Plane3D(wzy,wxz,wyx,xyz); //Return the dual as it's a vee operation
 }
 
 inline Plane3D vee(Point3D a, Point3D b, HomogeneousPoint3D c){
