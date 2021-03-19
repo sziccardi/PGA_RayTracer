@@ -300,7 +300,7 @@ Color getLighting(Hit intersection, int depth) {
             totalColor = totalColor + myMult; 
         } else if (l->mType == SPOT) {
             SpotLight* sl = (SpotLight*)(l); 
-            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.05f), sl->mPosition);
+            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.005f), sl->mPosition);
             if (!lightIntersect.mIntersected) {
                 Dir3D lightToSphere = (intersection.mPosition) - sl->mPosition;
                 float angleToLight = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
@@ -319,7 +319,7 @@ Color getLighting(Hit intersection, int depth) {
         }
         else if (l->mType == DIRECTIONAL) {
             DirectionalLight* dl = (DirectionalLight*)(l);
-            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.5f), vee(intersection.mPosition - dl->mDirection, intersection.mPosition + intersection.mNormal * 0.5f).normalized());
+            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.005f), vee(intersection.mPosition - dl->mDirection, intersection.mPosition + intersection.mNormal * 0.005f).normalized());
             if (!lightIntersect.mIntersected) {
                 float deflectionScaling = dot(intersection.mNormal, dl->mDirection.normalized());
                 totalColor = totalColor + intersection.mMaterial.mDiffuseColor * dl->mColor * std::max(0.f, deflectionScaling);
@@ -336,7 +336,7 @@ Color getLighting(Hit intersection, int depth) {
         else if (l->mType == POINT) {
             PointLight* pl = (PointLight*)(l);
             Dir3D lightDir = pl->mPosition - (intersection.mPosition + intersection.mNormal * 0.0f);
-            Hit lightIntersect = findIntersection(intersection.mPosition + intersection.mNormal * 0.05f, pl->mPosition);
+            Hit lightIntersect = findIntersection(intersection.mPosition + intersection.mNormal * 0.005f, pl->mPosition);
             if (!lightIntersect.mIntersected) {
                 float dist = (pl->mPosition).distToSqr(intersection.mPosition);
                 float coefficient = 1.f / dist;
@@ -371,7 +371,7 @@ Color getLighting(Hit intersection, int depth) {
     Line3D refl = sandwhich(hitPlane, intersection.mRay);
     float ldotr = std::max(dot(intersection.mRay.dir(), refl.dir()), 0.0f);
 
-    Color reflectColor = intersection.mMaterial.mSpecularColor * evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, refl, depth + 1);
+    Color reflectColor = intersection.mMaterial.mSpecularColor * evaluateRayTree(intersection.mPosition + 0.005f * intersection.mNormal, refl, depth + 1);
 
     totalColor = totalColor + reflectColor;
 
@@ -384,23 +384,23 @@ Color getLighting(Hit intersection, int depth) {
             // refract, get the refracted line and evaluate ray tree
             Dir3D refractedVector = getRefractedRay(intersection.mRay.dir(), intersection.mNormal, 1.0f, intersection.mMaterial.mRefractionIndex);
             // No refraction if it's total internal reflection. Just stop here.
-            if (refractedVector.magnitudeSqr() > 0.05) {
+            if (refractedVector.magnitudeSqr() > 0.005) {
 
-                Line3D rayLine = vee(intersection.mPosition - 0.05f * intersection.mNormal, refractedVector);
-                refractedColor = evaluateRayTree(intersection.mPosition - 0.05f * intersection.mNormal, rayLine, depth + 1);
+                Line3D rayLine = vee(intersection.mPosition - 0.005f * intersection.mNormal, refractedVector);
+                refractedColor = evaluateRayTree(intersection.mPosition - 0.005f * intersection.mNormal, rayLine, depth + 1);
             }
         } else {
 
             Dir3D refractedVector = getRefractedRay(intersection.mRay.dir(), -1 * intersection.mNormal, intersection.mMaterial.mRefractionIndex, 1.0f);
             // No refraction if it's total internal reflection. Just stop here.
-            if (refractedVector.magnitudeSqr() > 0.05) {
+            if (refractedVector.magnitudeSqr() > 0.005) {
                 float t = (intersection.mRayStartPoint - intersection.mPosition).magnitude();
                 // kr = std::exp(-intersection.mMaterial.mAmbientColor.r * t);
                 // kg = std::exp(-intersection.mMaterial.mAmbientColor.g * t);
                 // kb = std::exp(-intersection.mMaterial.mAmbientColor.b * t);
 
-                Line3D rayLine = vee(intersection.mPosition + 0.05f * intersection.mNormal, refractedVector);
-                refractedColor = evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, rayLine, depth + 1);
+                Line3D rayLine = vee(intersection.mPosition + 0.005f * intersection.mNormal, refractedVector);
+                refractedColor = evaluateRayTree(intersection.mPosition + 0.005f * intersection.mNormal, rayLine, depth + 1);
             }
         }
 
