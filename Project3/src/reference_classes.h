@@ -13,6 +13,16 @@ enum SamplingType { NONE, JITTERED };
 // ---------------------------------
 //  Define Primatives
 // ---------------------------------
+
+float triangleArea(Point3D p1, Point3D p2, Point3D p3) {
+	Dir3D v1 = p2 - p1;
+	Dir3D v2 = p3 - p1;
+
+	// Dir3D v1D = Dir3D(v1.x, v1.y, v1.z);
+	// Dir3D v2D = Dir3D(v2.x, v2.y, v2.z);
+
+	return cross(v1, v2).magnitude() / 2;
+}
 struct Material {
 	Color mAmbientColor, mDiffuseColor, mSpecularColor, mTransmissiveColor;
 	float mSpecularPower, mRefractionIndex;
@@ -68,6 +78,9 @@ struct Triangle {
 	Point3D mP1, mP2, mP3;
 	Material mMaterial;
 	Plane3D plane;
+	Dir3D normal1, normal2, normal3;
+	bool normalTriangle = false;
+	float area;
 
 	Triangle(Material m, Point3D p1, Point3D p2, Point3D p3) {
 		mMaterial = m;
@@ -75,6 +88,20 @@ struct Triangle {
 		mP2 = p2;
 		mP3 = p3;
 		plane = vee(p1,p2,p3);
+	}
+
+	Triangle(Material m, Point3D p1, Point3D p2, Point3D p3, Dir3D norm1, Dir3D norm2, Dir3D norm3) {
+		mMaterial = m;
+		mP1 = p1;
+		mP2 = p2;
+		mP3 = p3;
+		plane = vee(p1,p2,p3);
+
+		normal1 = norm1;
+		normal2 = norm2;
+		normal3 = norm3;
+		normalTriangle = true;
+		area = triangleArea(mP1, mP2, mP3);
 	}
 
 	Plane3D getPlane() {
@@ -90,36 +117,24 @@ struct Triangle {
 	}
 
 	Dir3D getNormal(Point3D hitPoint, Dir3D ray) {
-		Dir3D norm1 = cross((mP2 - mP1), (mP3 - mP1));
-        Dir3D normal = (dot(norm1, ray) < 0) ? norm1 : norm1 * -1;
 
-		return normal.normalized();
-	}
-};
+		if (normalTriangle) {
+			// std::cout << "normal triangle" << std::endl;
+			float v = triangleArea(mP3, mP1, hitPoint) / area;
+			float w = triangleArea(mP1, mP2, hitPoint) / area;
+			float u = triangleArea(mP2, mP3, hitPoint) / area;
 
-struct NormalTriangle : Triangle {
+			Dir3D returning = normal1 * u + normal2 * v + normal3 * w;
+			return returning.normalized();
 
-	Dir3D normal1, normal2, normal3;
+		} else {
+			// std::cout << "normal get normal" << std::endl;
+			Dir3D norm1 = cross((mP2 - mP1), (mP3 - mP1));
+			Dir3D normal = (dot(norm1, ray) < 0) ? norm1 : norm1 * -1;
 
-	NormalTriangle(Material m, Point3D p1, Point3D p2, Point3D p3, Dir3D norm1, Dir3D norm2, Dir3D norm3) : Triangle(m, p1, p2, p3) {
-		normal1 = norm1;
-		normal2 = norm2;
-		normal3 = norm3;
-	}
-
-	// TODO: Add barycentric coord stuff for this. To interpolate between the normals and stuff
-	Dir3D getNormal(Point3D hitPoint, Dir3D ray) {
-		// Dir3D norm1 = cross((mP2 - mP1), (mP3 - mP1));
-        // Dir3D normal = (dot(norm1, ray) < 0) ? norm1 : norm1 * -1;
-
-		Point3D sumPoint = mP1 + mP2 + mP3;
-		Point3D percentOfEach = hitPoint / sumPoint;
-		sumPoint.print();
-		percentOfEach.print();
-
-		return (normal1 * percentOfEach.x + normal2 * percentOfEach.y + normal3 * percentOfEach.z).normalized(); 
-
-		// return normal.normalized();
+			return normal.normalized();
+		}
+		
 	}
 };
 

@@ -22,10 +22,11 @@ point_light: 60 60 60 -4 8 -10
 #point_light: 50 50 50 10 5 -5
 ambient_light: .4 .4 .4
 #background: .73 .83 1
-#background: .5 .75 .93  #Also sky blue
-background: .25 .35 .5  #Also sky blue
-#background: .0 .5 1  #Sky blue
 
+#Also sky blue
+#background: .5 .75 .93  
+background: .25 .35 .5
+#background: .0 .5 1
 
 max_depth: 2
 

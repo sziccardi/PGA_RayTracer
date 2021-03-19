@@ -106,7 +106,10 @@ Color evaluateRayTree(Point3D start, Line3D rayLine, int depth) {
         color = getLighting(myHit, depth); //Color(std::abs(myHit.mNormal.x), std::abs(myHit.mNormal.y), std::abs(myHit.mNormal.z)); //TODO do color calculations
         //cout << color << endl;
     }
-    else color = background;
+    else {
+        color = background;
+        // cout << "background col" << endl;
+    }
 
     return color;
 }
@@ -227,7 +230,7 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
         if (t.pointInside(hitPoint)) {
             // std::cout << "I'M INSIDE" << std::endl;
             float tempDist = (hitPoint - rayStart).magnitude();
-            if (dot((hitPoint - rayStart), rayLine.dir()) >= 0 || dot((hitPoint - rayStart), rayLine.dir()) >= 0) {
+            if (dot((hitPoint - rayStart), rayLine.dir()) >= 0) {
                 // hitPoint.print();
 
                 if (tempDist < currMinDist && tempDist > 0.01f) {
@@ -297,35 +300,20 @@ Color getLighting(Hit intersection, int depth) {
             totalColor = totalColor + myMult; 
         } else if (l->mType == SPOT) {
             SpotLight* sl = (SpotLight*)(l); 
-            Hit lightIntersect = findIntersection(sl->mPosition, (intersection.mPosition + intersection.mNormal * 0.05f));
+            Hit lightIntersect = findIntersection((intersection.mPosition + intersection.mNormal * 0.05f), sl->mPosition);
             if (!lightIntersect.mIntersected) {
                 Dir3D lightToSphere = (intersection.mPosition) - sl->mPosition;
                 float angleToLight = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
                 float deflectionScaling = dot(intersection.mNormal, -1.f * sl->mDirection.normalized());
+                float dist = (sl->mPosition).distToSqr(intersection.mPosition);
+                float coefficient = 1.f / dist;
                 if (angleToLight <= sl->mMinAngle) {
-                    totalColor = totalColor + intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
-
-                    Color ks = intersection.mMaterial.mSpecularColor;
-                    Dir3D v = (intersection.mRayStartPoint - intersection.mPosition).normalized();
-                    Dir3D h = (v + sl->mDirection).normalized();
-                    Dir3D n = intersection.mNormal;
-                    float p = intersection.mMaterial.mSpecularPower;
-                    Color I = sl->mColor;
-                    totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);
-                }
-                else if (angleToLight > sl->mMinAngle && angleToLight < sl->mMaxAngle) {
+                    totalColor = totalColor + coefficient * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
+                } else if (angleToLight > sl->mMinAngle && angleToLight < sl->mMaxAngle) {
                     float range = (sl->mMaxAngle - sl->mMinAngle);
                     float diff = angleToLight - sl->mMinAngle;
                     float intensity = 1 - diff / range;
-                    totalColor = totalColor + intensity * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
-
-                    Color ks = intersection.mMaterial.mSpecularColor;
-                    Dir3D v = (intersection.mRayStartPoint - intersection.mPosition).normalized();
-                    Dir3D h = (v + sl->mDirection).normalized();
-                    Dir3D n = intersection.mNormal;
-                    float p = intersection.mMaterial.mSpecularPower;
-                    Color I = sl->mColor;
-                    totalColor = totalColor + ks * I * std::pow(std::max(0.f, dot(n, h)), p);
+                    totalColor = totalColor + coefficient * intensity * intersection.mMaterial.mDiffuseColor * sl->mColor * std::max(0.f, deflectionScaling);
                 }
             }
         }
@@ -376,26 +364,15 @@ Color getLighting(Hit intersection, int depth) {
             }
         }        
     }
-    
-    // Add reflection and refraction
-    // pseudocode, delete as complete
-
-    // Ray mirror = Reflect( ray, hit.normal ); DONE
-    // contribution += Kr*EvaluateRayTree( scene, mirror )
 
     Line3D fakeLine = vee(intersection.mPosition, intersection.mNormal);
-    // std::cout << "fake line: " << std::endl;
-    // fakeLine.print();
+
     Plane3D hitPlane = dot(intersection.mPosition, fakeLine);
     Line3D refl = sandwhich(hitPlane, intersection.mRay);
     float ldotr = std::max(dot(intersection.mRay.dir(), refl.dir()), 0.0f);
 
     Color reflectColor = intersection.mMaterial.mSpecularColor * evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, refl, depth + 1);
 
-    // TODO: ldotr is currently acting at Kr
-    // TODO: Kr should be the specular color of the material
-
-    // std::cout << "reflect color: " << reflectColor.r << ", " << reflectColor.g << ", " << reflectColor.b << std::endl;
     totalColor = totalColor + reflectColor;
 
     
@@ -418,9 +395,9 @@ Color getLighting(Hit intersection, int depth) {
             // No refraction if it's total internal reflection. Just stop here.
             if (refractedVector.magnitudeSqr() > 0.05) {
                 float t = (intersection.mRayStartPoint - intersection.mPosition).magnitude();
-                kr = std::exp(-intersection.mMaterial.mAmbientColor.r * t);
-                kg = std::exp(-intersection.mMaterial.mAmbientColor.g * t);
-                kb = std::exp(-intersection.mMaterial.mAmbientColor.b * t);
+                // kr = std::exp(-intersection.mMaterial.mAmbientColor.r * t);
+                // kg = std::exp(-intersection.mMaterial.mAmbientColor.g * t);
+                // kb = std::exp(-intersection.mMaterial.mAmbientColor.b * t);
 
                 Line3D rayLine = vee(intersection.mPosition + 0.05f * intersection.mNormal, refractedVector);
                 refractedColor = evaluateRayTree(intersection.mPosition + 0.05f * intersection.mNormal, rayLine, depth + 1);

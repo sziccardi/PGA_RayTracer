@@ -193,8 +193,8 @@ void parseSceneFile(std::string fileName){
                command = "normal_triangle:";
                found = line.find(command);
                if (found != std::string::npos) {
-                   cout << "new directional light " << endl;
-                   cout << "color = (";
+                   cout << "new normal triangle " << endl;
+                   cout << "vertex = (";
                    iter = found + command.length();
                    std::string subString = line.substr(iter);
                    int start = subString.find_first_not_of(" \t\r\n");
@@ -220,14 +220,14 @@ void parseSceneFile(std::string fileName){
                    float b = std::stof(stringB);
                    cout << std::to_string(b) << ") " << endl;
 
-                   cout << "direction = ( ";
+                   cout << "normal index = ( ";
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
                    end = subString.substr(start).find_first_of(" \t\r\n");
                    std::string stringX = subString.substr(start);
                    if (end >= 0) stringX = subString.substr(start, start + end);
                    float x = std::stof(stringX);
-                   cout << std::to_string(x) << ", ";
+                   cout << normals[x] << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -235,7 +235,7 @@ void parseSceneFile(std::string fileName){
                    std::string stringY = subString.substr(start);
                    if (end >= 0) stringY = subString.substr(start, start + end);
                    float y = std::stof(stringY);
-                   cout << std::to_string(y) << ", ";
+                   cout << normals[y] << ", ";
 
                    subString = subString.substr(end + start);
                    start = subString.find_first_not_of(" \t\r\n");
@@ -243,9 +243,9 @@ void parseSceneFile(std::string fileName){
                    std::string stringZ = subString.substr(start);
                    if (end >= 0) stringZ = subString.substr(start, start + end);
                    float z = std::stof(stringZ);
-                   cout << std::to_string(z) << ") " << endl;
+                   cout << normals[z] << ") " << endl;
 
-                   triangles.push_back(NormalTriangle(currentMaterial, vertices[r], vertices[g], vertices[b], normals[x], normals[y], normals[z]));
+                   triangles.push_back(Triangle(currentMaterial, vertices[r], vertices[g], vertices[b], normals[x], normals[y], normals[z]));
                } else {
                 //    If we find a normal triangle on a line, we don't want to also find a triangle
                     command = "triangle:";
@@ -684,6 +684,7 @@ void parseSceneFile(std::string fileName){
                    int end = subString.substr(start).find_first_of(" \t\r\n");
                    std::string stringR = subString.substr(start);
                    if (end >= 0) stringR = subString.substr(start, start + end);
+                   cout << stringR << endl;
                    float r = std::stof(stringR);
                    cout << std::to_string(r) << ", ";
 
@@ -728,7 +729,7 @@ void parseSceneFile(std::string fileName){
                    float z = std::stof(stringZ);
                    cout << std::to_string(z) << ") " << endl;
 
-                   lights.push_back(new DirectionalLight(Color(r, g, b), Dir3D(x, y, z)));
+                   lights.push_back(new DirectionalLight(Color(r, g, b), Dir3D(-x, -y, -z)));
                }
 
                command = "spot_light:";
