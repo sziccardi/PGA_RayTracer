@@ -18,9 +18,6 @@ float triangleArea(Point3D p1, Point3D p2, Point3D p3) {
 	Dir3D v1 = p2 - p1;
 	Dir3D v2 = p3 - p1;
 
-	// Dir3D v1D = Dir3D(v1.x, v1.y, v1.z);
-	// Dir3D v2D = Dir3D(v2.x, v2.y, v2.z);
-
 	return cross(v1, v2).magnitude() / 2;
 }
 struct Material {

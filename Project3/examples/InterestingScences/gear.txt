@@ -22,7 +22,8 @@ directional_light: .6 .6 .6 0 -1 -.5
 #point_light: 50 50 50 10 5 -5
 ambient_light: .4 .4 .4
 #background: .73 .83 1
-background: .5 .75 .93  # Sky blue
+# Sky blue
+background: .5 .75 .93  
 
 #material: 0 1 0 0 1 0 .2 .2 .2 4 0 0 0 1.0
 #sphere: 0 3 1 .25
