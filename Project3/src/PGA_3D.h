@@ -146,6 +146,7 @@ struct Point3D {
     Point3D operator+(Dir3D rhs);
     Point3D operator-(Dir3D rhs);
     Point3D operator+(Point3D rhs);
+    Point3D operator*(float s);
 
     Point3D normalized() {
         return Point3D(x, y, z); //Points are already normalized
@@ -315,6 +316,10 @@ inline Point3D Point3D::operator+(Dir3D rhs){
 
 inline Point3D Point3D::operator-(Dir3D rhs){
   return Point3D(x-rhs.x,y-rhs.y,z-rhs.z);
+}
+
+inline Point3D Point3D::operator*(float s) {
+    return Point3D(x * s, y * s, z * s);
 }
 
 
@@ -580,6 +585,12 @@ inline Point3D proj(Point3D p, Line3D l) {
     float wzy = -pw * l.x + py * l.mz - pz * l.my;
     float xyz = px * l.x + py * l.y + pz * l.z;
     return Point3D(wzy / xyz, wxz / xyz, wyx / xyz);
+}
+
+float triangleArea(Point3D p1, Point3D p2, Point3D p3) {
+    Dir3D v1 = p2 - p1;
+    Dir3D v2 = p3 - p1;
+    return cross(v1, v2).magnitude() / 2;
 }
 
 bool sameSide(Point3D p1, Point3D p2, Point3D a, Point3D b) {

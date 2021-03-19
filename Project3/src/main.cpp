@@ -179,16 +179,24 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
 Hit rayTriIntersect(Point3D rayStart, Line3D rayLine, Triangle tri) {
     Plane3D triPlane = vee(verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition);
     HomogeneousPoint3D hitPoint = wedge(rayLine, triPlane);
-
-    if (hitPoint.w >= 0 || !pointInTriangle(Point3D(hitPoint), verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition)) return Hit(); //ray is parallel
+    Point3D point = Point3D(hitPoint.x / hitPoint.w, hitPoint.y / hitPoint.w, hitPoint.z / hitPoint.w);
+    
+    if (!pointInTriangle(point, verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition)) return Hit(); //ray is parallel
+    //cout << hitPoint << endl;
     if (tri.mUseBarycentric) {
-        Coord3D bary = getBarycentricCoord(Point3D(hitPoint), tri);
-        Dir3D myNorm = bary.mU * norms[tri.mNorm1] + bary.mV * norms[tri.mNorm2] + bary.mW * norms[tri.mNorm3];
-        return Hit(Point3D(hitPoint), myNorm, tri.mMaterial);
+        Coord3D bary = getBarycentricCoord(point, tri);
+        int scale1 = 1;
+        //if (dot(norms[tri.mNorm1], rayLine.dir()) > 0) scale1 = -1;
+        int scale2 = 1;
+        //if (dot(norms[tri.mNorm2], rayLine.dir()) > 0) scale2 = -1;
+        int scale3 = 1;
+        //if (dot(norms[tri.mNorm3], rayLine.dir()) > 0) scale3 = -1;
+        Dir3D myNorm = scale1 * bary.mU * norms[tri.mNorm1] + scale2 * bary.mV * norms[tri.mNorm2] + scale3 * bary.mW * norms[tri.mNorm3];
+        return Hit(point, myNorm.normalized(), tri.mMaterial);
     }
     int scale = 1;
     if (dot(tri.mNormal, rayLine.dir()) > dot(-1 * tri.mNormal, rayLine.dir())) scale = -1;
-    return Hit(Point3D(hitPoint), scale * tri.mNormal, tri.mMaterial); //intersect with flat triangle
+    return Hit(point, scale * tri.mNormal, tri.mMaterial); //intersect with flat triangle
 }
 
 Hit rayTriIntersect(Point3D rayStart, Point3D rayEnd, Triangle tri) {
@@ -199,16 +207,23 @@ Hit rayTriIntersect(Point3D rayStart, Point3D rayEnd, Triangle tri) {
     if ((dot(rayStart - Point3D(0, 0, 0), tri.mNormal) < 0) && (dot(rayEnd - Point3D(0, 0, 0), tri.mNormal) < 0)) return Hit();
 
     HomogeneousPoint3D hitPoint = wedge(rayLine, triPlane);
+    Point3D point = Point3D(hitPoint.x / hitPoint.w, hitPoint.y / hitPoint.w, hitPoint.z / hitPoint.w);
 
-    if (hitPoint.w >= 0 || !pointInTriangle(Point3D(hitPoint), verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition)) return Hit(); //ray is parallel
+    if (!pointInTriangle(point, verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition)) return Hit(); //ray is parallel
     if (tri.mUseBarycentric) {
         Coord3D bary = getBarycentricCoord(Point3D(hitPoint), tri);
-        Dir3D myNorm = bary.mU * norms[tri.mNorm1] + bary.mV * norms[tri.mNorm2] + bary.mW * norms[tri.mNorm3];
-        return Hit(Point3D(hitPoint), myNorm, tri.mMaterial);
+        int scale1 = 1;
+        //if (dot(norms[tri.mNorm1], rayLine.dir()) > 0) scale1 = -1;
+        int scale2 = 1;
+        //if (dot(norms[tri.mNorm2], rayLine.dir()) > 0) scale2 = -1;
+        int scale3 = 1;
+        //if (dot(norms[tri.mNorm3], rayLine.dir()) > 0) scale3 = -1;
+        Dir3D myNorm = scale1 * bary.mU * norms[tri.mNorm1] + scale2 * bary.mV * norms[tri.mNorm2] + scale3 * bary.mW * norms[tri.mNorm3];
+        return Hit(point, myNorm, tri.mMaterial);
     }
     int scale = 1;
     if (dot(tri.mNormal, rayLine.dir()) > dot(-1 * tri.mNormal, rayLine.dir())) scale = -1;
-    return Hit(Point3D(hitPoint), scale * tri.mNormal, tri.mMaterial); //intersect with flat triangle
+    return Hit(point, scale * tri.mNormal, tri.mMaterial); //intersect with flat triangle
 }
 
 Hit findIntersection(Point3D rayStart, Line3D rayLine) {
@@ -216,14 +231,29 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
     float currMinDist = 10000000000000;
     
     for (Triangle tri : tris) {
+        if (tri.mNormal == 0.f && tri.mNormal.y == 0.f && tri.mNormal.z == 0.f) {
+            Point3D avgPos = (verts[tri.mVert1].mPosition + verts[tri.mVert2].mPosition + verts[tri.mVert3].mPosition) / 3.f;
+
+            Dir3D edge1 = verts[tri.mVert2].mPosition - verts[tri.mVert1].mPosition;
+            Dir3D edge2 = verts[tri.mVert3].mPosition - verts[tri.mVert1].mPosition;
+            Dir3D norm = cross(edge1, edge2).normalized();
+
+            if (dot(rayLine.dir(), norm) > 0) norm = norm * -1.f;
+
+            tri.mCenter = avgPos;
+            tri.mNormal = norm;
+        }
+
         Hit tempHit = rayTriIntersect(rayStart, rayLine, tri);
         if (tempHit.mIntersected) {
-            float tempDist = (tempHit.mPosition - rayStart).magnitude();
-            if (tempDist < currMinDist) {
-                currMinDist = tempDist;
-                tempHit.mMaterial = tri.mMaterial;
-                closestHit = tempHit;
-                //cout << "hit at " << tempHit.mPosition << endl;
+            if (dot(tempHit.mPosition - rayStart, rayLine.dir()) >= 0) {
+                float tempDist = (tempHit.mPosition - rayStart).magnitude();
+                if (tempDist < currMinDist) {
+                    currMinDist = tempDist;
+                    tempHit.mMaterial = tri.mMaterial;
+                    closestHit = tempHit;
+                    //cout << "hit at " << tempHit.mPosition << endl;
+                }
             }
         }
     }
@@ -250,13 +280,28 @@ Hit findIntersection(Point3D p1, Point3D p2) {
     float currMinDist = 10000000000;
 
     for (Triangle tri : tris) {
+        if (tri.mNormal == 0.f && tri.mNormal.y == 0.f && tri.mNormal.z == 0.f) {
+            Point3D avgPos = (verts[tri.mVert1].mPosition + verts[tri.mVert2].mPosition + verts[tri.mVert3].mPosition) / 3.f;
+
+            Dir3D edge1 = verts[tri.mVert2].mPosition - verts[tri.mVert1].mPosition;
+            Dir3D edge2 = verts[tri.mVert3].mPosition - verts[tri.mVert1].mPosition;
+            Dir3D norm = cross(edge1, edge2).normalized();
+
+            if (dot((p2 - p1), norm) > 0) norm = norm * -1.f;
+
+            tri.mCenter = avgPos;
+            tri.mNormal = norm;
+        }
+
         Hit tempHit = rayTriIntersect(p1, p2, tri);
         if (tempHit.mIntersected) {
-            float tempDist = tempHit.mPosition.distToSqr(p1);
-            if (tempDist < currMinDist) {
-                currMinDist = tempDist;
-                tempHit.mMaterial = tri.mMaterial;
-                closestHit = tempHit;
+            if (dot(tempHit.mPosition - p1, p2 - p1) >= 0 || dot(tempHit.mPosition - p2, p2 - p1) >= 0) {
+                float tempDist = tempHit.mPosition.distToSqr(p1);
+                if (tempDist < currMinDist) {
+                    currMinDist = tempDist;
+                    tempHit.mMaterial = tri.mMaterial;
+                    closestHit = tempHit;
+                }
             }
         }
     }
@@ -383,29 +428,36 @@ Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
 
 
         //REFRACT
-        //if (hit.mMaterial.mTransmissiveColor > 0) {
+        if (hit.mMaterial.mTransmissiveColor.getIntensity() > 0) {
+            float kr = 1, kg = 1, kb = 1;
+            Color refractedColor = Color(0, 0, 0);
+
             if (dot(hit.mNormal, ray) < 0) {
                 //into object
                 Dir3D refractDir = getRefrectRay(hit.mNormal, ray, hit.mMaterial.mRefractionIndex);
-                totalColor = totalColor + hit.mMaterial.mTransmissiveColor * evaluateRayTree(hit.mPosition + 0.0001f * refractDir, refractDir);
+                if (refractDir.magnitudeSqr() > 0.05) {
+                    refractedColor = evaluateRayTree(hit.mPosition - 0.05f * hit.mNormal, refractDir);
+                }
+                
+                //totalColor = totalColor + hit.mMaterial.mTransmissiveColor * evaluateRayTree(hit.mPosition + 0.0001f * refractDir, refractDir);
             }
             else {
                 //out of object
-                float t = rayStart.distTo(hit.mPosition);
-                Color beersScale = Color(exp(-hit.mMaterial.mAmbientColor.r * t), exp(-hit.mMaterial.mAmbientColor.g * t), exp(-hit.mMaterial.mAmbientColor.b * t));
-                //cout << beersScale << endl;
+               //cout << beersScale << endl;
                 //if (abs(beersScale.r) > 0.0001 && abs(beersScale.g) > 0.0001 && abs(beersScale.b) > 0.0001) cout << beersScale << endl;
 
                 Dir3D refractDir = getRefrectRay(-1.f * hit.mNormal, ray, 1 / hit.mMaterial.mRefractionIndex);
-                //if (refractDir.magnitudeSqr() != 0) {
-
-                //}
-               // else {
-                    //internal reflection
-                    totalColor = totalColor + beersScale * hit.mMaterial.mTransmissiveColor * evaluateRayTree(hit.mPosition + 0.0001f * refractDir, refractDir);
-                //}
+                if (refractDir.magnitudeSqr() > 0.05) {
+                    float t = rayStart.distTo(hit.mPosition);
+                    //kr = std::exp(-hit.mMaterial.mAmbientColor.r * t);
+                    //kg = std::exp(-hit.mMaterial.mAmbientColor.g * t);
+                    //kb = std::exp(-hit.mMaterial.mAmbientColor.b * t);
+                    refractedColor = evaluateRayTree(hit.mPosition + 0.05f * hit.mNormal, refractDir);
+                }
             }
-        //}
+
+            totalColor = totalColor + Color(kr, kg, kb) * hit.mMaterial.mTransmissiveColor * refractedColor;
+        }
     }
     
     return totalColor.getTonemapped();
@@ -430,14 +482,14 @@ float randomPixelLocationNoise(float noiseSize) {
 }
 
 Coord3D getBarycentricCoord(Point3D p, Triangle tri) {
-    Dir3D edge1 = verts[tri.mVert2].mPosition - verts[tri.mVert1].mPosition;
-    Dir3D edge2 = verts[tri.mVert3].mPosition - verts[tri.mVert1].mPosition;
-    Dir3D edge3 = verts[tri.mVert3].mPosition - verts[tri.mVert2].mPosition;
+    Point3D a = verts[tri.mVert1].mPosition;
+    Point3D b = verts[tri.mVert2].mPosition;
+    Point3D c = verts[tri.mVert3].mPosition;
 
-    float totalArea = cross(edge1, edge2).magnitudeSqr();
-    float area1 = cross(edge1, p - verts[tri.mVert1].mPosition).magnitudeSqr();
-    float area2 = cross(edge2, p - verts[tri.mVert1].mPosition).magnitudeSqr();
-    float area3 = cross(edge3, p - verts[tri.mVert2].mPosition).magnitudeSqr();
-    
+    float totalArea = triangleArea(a, b, c);
+    float area1 = triangleArea(b, c, p); //area pbc
+    float area2 = triangleArea(c, a, p); //area pca
+    float area3 = triangleArea(a, b, p); //area pab
+    //cout << "bary = (" << area1 / totalArea << ", " << area2 / totalArea << ", " << area3 / totalArea << ")" << endl;
     return Coord3D(area1 / totalArea, area2 / totalArea, area3 / totalArea);
 }
