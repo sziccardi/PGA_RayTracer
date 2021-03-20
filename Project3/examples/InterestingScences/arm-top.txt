@@ -2,10 +2,7 @@
 #Model by Moses Adeagbo
 
 #Camera Set-up
-camera_pos: 20 5 -5
-camera_fwd: .95 .3 -.15
-camera_up: 0 -1 0
-camera_fov_ha: 26
+camera: 20 5 -5 -.95 -.3 .15 0 -1 0 26
 output_image: arm.png
 #film_resolution: 200 300
 film_resolution: 400 600
@@ -16,7 +13,7 @@ film_resolution: 400 600
 
 #White overhead light
 point_light: 20 20 20 5 -8 3
-directional_light: 1 1 1 -5 -2 -2
+directional_light:: 1 1 1 -5 -2 -2
 #point_light: 50 50 50 10 5 -5
 ambient_light: .4 .4 .4
 #background: .73 .83 1
@@ -24,7 +21,6 @@ background: .5 .75 .93  # Sky blue
 
 
 max_depth: 1
-
 
 
 max_vertices: 4732

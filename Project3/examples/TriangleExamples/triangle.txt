@@ -1,15 +1,7 @@
 background: 0 .25 0
 max_vertices: 3
-max_normals: 3
 vertex: 0 0 2
 vertex: 0 1 2
 vertex: 1 0 2
 
-normal: -1 0 -1
-normal: 0 -1 -1
-normal: 0 0 -1
-
-point_light: 1 1 1 0 0 1
-
-material: 0 .7 0 0 .7 0 0 0 0 16 .9 .9 .9 1.0
-normal_triangle: 0 1 2 2 1 0
+triangle: 0 1 2

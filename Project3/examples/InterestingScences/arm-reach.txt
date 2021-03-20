@@ -2,11 +2,8 @@
 #Model by Moses Adeagbo
 
 #Camera Set-up
-camera_pos: 1.8 -13 -3
-camera_fwd: 0 -0.8 -0.4
-camera_up: 1 .4 .4
-camera_fov_ha: 26
-output_image: reachingHand.png
+camera: 1.8 -13 -3 -0 .8 .4 1 .4 .4 26
+output_image: reachingHand.bmp
 #film_resolution: 250 200
 #film_resolution: 500 400
 film_resolution: 800 600

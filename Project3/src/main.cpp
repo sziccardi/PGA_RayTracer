@@ -18,12 +18,13 @@ int main(int argc, char** argv) {
     //Render scene
     float imgW = img_width, imgH = img_height;
     float halfW = imgW / 2, halfH = imgH / 2;
-    float d = halfH / tanf(halfAngleVFOV * (M_PI / 180.0f));
+    float d = halfH / tanf(halfAngleVFOV * (pi / 180.0f));
 
     Image outputImg = Image(img_width, img_height);
     auto t_start = std::chrono::high_resolution_clock::now();
-
+    //#pragma omp parallel for
     for (int i = 0 / 2; i < img_width; i++) {
+        //#pragma omp parallel for
         for (int j = 0 / 2; j < img_height; j++) {
             if (sampling.mType == JITTERED) {
 
@@ -43,7 +44,7 @@ int main(int argc, char** argv) {
                         // rayDir : ray starting at eye and going through the image plane at p
                         Dir3D rayDir = (p - eye);
 
-                        Color color = evaluateRayTree(eye, rayDir);
+                        Color color = evaluateRayTree(eye, rayDir, 0);
                     
                         red += color.r;
                         green += color.g;
@@ -73,8 +74,7 @@ int main(int argc, char** argv) {
                 //cout << p << endl;
                 // rayDir : ray starting at eye and going through the image plane at p
                 Dir3D rayDir = (p - eye);
-                mCurrentDepth = 0;
-                Color color = evaluateRayTree(eye, rayDir);
+                Color color = evaluateRayTree(eye, rayDir, 0);
                 
                 outputImg.setPixel(i, j, color);
             }            
@@ -170,7 +170,7 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
     Dir3D norm2 = (p2 - sphereCenter);
 
     if (dot((p1 - rayStart), rayLine.dir()) >= 0 || dot((p2 - rayStart), rayLine.dir()) >= 0) { //are the points in same direction as the ray line?
-        if ((rayStart - p1).magnitude() > (rayStart - p2).magnitude()) return Hit(p2, norm2);
+        if ((rayStart - p1).magnitude() >= (rayStart - p2).magnitude()) return Hit(p2, norm2);
         return Hit(p1, norm1);    
     }
     return Hit();
@@ -181,7 +181,7 @@ Hit rayTriIntersect(Point3D rayStart, Line3D rayLine, Triangle tri) {
     HomogeneousPoint3D hitPoint = wedge(rayLine, triPlane);
     Point3D point = Point3D(hitPoint.x / hitPoint.w, hitPoint.y / hitPoint.w, hitPoint.z / hitPoint.w);
     
-    if (!pointInTriangle(point, verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition)) return Hit(); //ray is parallel
+    if (dot(rayLine.dir(), (point - rayStart)) > 0 && !pointInTriangle(point, verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition)) return Hit(); //ray is parallel
     //cout << hitPoint << endl;
     if (tri.mUseBarycentric) {
         Coord3D bary = getBarycentricCoord(point, tri);
@@ -203,26 +203,28 @@ Hit rayTriIntersect(Point3D rayStart, Point3D rayEnd, Triangle tri) {
     Line3D rayLine = vee(rayStart, rayEnd);
     Plane3D triPlane = vee(verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition);
 
-    //check if the start and end are on opposite sides of the plane
-    if ((dot(rayStart - Point3D(0, 0, 0), tri.mNormal) < 0) && (dot(rayEnd - Point3D(0, 0, 0), tri.mNormal) < 0)) return Hit();
+    //check if the start and end are on opposite sides of the tri plane
+    bool sign1 = (dot(rayStart - Point3D(0, 0, 0), tri.mNormal) < 0.0f);
+    bool sign2 = (dot(rayEnd - Point3D(0, 0, 0), tri.mNormal) < 0.0f);
+    if ((sign1 == true && sign2 == true) || (sign1 == false && sign2 == false)) return Hit();
 
     HomogeneousPoint3D hitPoint = wedge(rayLine, triPlane);
     Point3D point = Point3D(hitPoint.x / hitPoint.w, hitPoint.y / hitPoint.w, hitPoint.z / hitPoint.w);
 
-    if (!pointInTriangle(point, verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition)) return Hit(); //ray is parallel
+    if (dot(rayLine.dir(), (point - rayStart)) > 0 && !pointInTriangle(point, verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition)) return Hit(); //ray is parallel
     if (tri.mUseBarycentric) {
-        Coord3D bary = getBarycentricCoord(Point3D(hitPoint), tri);
+        Coord3D bary = getBarycentricCoord(point, tri);
         int scale1 = 1;
-        //if (dot(norms[tri.mNorm1], rayLine.dir()) > 0) scale1 = -1;
+        if (dot(norms[tri.mNorm1], (rayStart - rayEnd)) > 0.05) scale1 = -1;
         int scale2 = 1;
-        //if (dot(norms[tri.mNorm2], rayLine.dir()) > 0) scale2 = -1;
+        if (dot(norms[tri.mNorm2], (rayStart - rayEnd)) > 0.05) scale2 = -1;
         int scale3 = 1;
-        //if (dot(norms[tri.mNorm3], rayLine.dir()) > 0) scale3 = -1;
+        if (dot(norms[tri.mNorm3], (rayStart - rayEnd)) > 0.05) scale3 = -1;
         Dir3D myNorm = scale1 * bary.mU * norms[tri.mNorm1] + scale2 * bary.mV * norms[tri.mNorm2] + scale3 * bary.mW * norms[tri.mNorm3];
         return Hit(point, myNorm, tri.mMaterial);
     }
     int scale = 1;
-    if (dot(tri.mNormal, rayLine.dir()) > dot(-1 * tri.mNormal, rayLine.dir())) scale = -1;
+    if (dot(tri.mNormal, (rayStart - rayEnd)) > 0.05) scale = -1;
     return Hit(point, scale * tri.mNormal, tri.mMaterial); //intersect with flat triangle
 }
 
@@ -293,10 +295,10 @@ Hit findIntersection(Point3D p1, Point3D p2) {
             tri.mNormal = norm;
         }
 
-        Hit tempHit = rayTriIntersect(p1, p2, tri);
+        Hit tempHit = rayTriIntersect(p2, p1, tri);
         if (tempHit.mIntersected) {
-            if (dot(tempHit.mPosition - p1, p2 - p1) >= 0 || dot(tempHit.mPosition - p2, p2 - p1) >= 0) {
-                float tempDist = tempHit.mPosition.distToSqr(p1);
+            float tempDist = tempHit.mPosition.distTo(p1);
+            if (tempDist < p1.distTo(p2)) {
                 if (tempDist < currMinDist) {
                     currMinDist = tempDist;
                     tempHit.mMaterial = tri.mMaterial;
@@ -309,16 +311,18 @@ Hit findIntersection(Point3D p1, Point3D p2) {
     for (Sphere s : spheres) {
         Hit tempHit = lineSegmentSphereIntersect_fast(p1, p2, s.mCenter, s.mRadius);
         if (tempHit.mIntersected) {
-            float tempDist = tempHit.mPosition.distToSqr(p1);
-            if (tempDist < currMinDist) {
-                currMinDist = tempDist;
-                tempHit.mMaterial = s.mMaterial;
-                closestHit = tempHit;
+            float tempDist = tempHit.mPosition.distTo(p1);
+            if (tempDist <= p2.distTo(p1)) {
+                if (tempDist < currMinDist) {
+                    currMinDist = tempDist;
+                    tempHit.mMaterial = s.mMaterial;
+                    closestHit = tempHit;
+                }
             }
         }
     }
 
-
+    //cout << closestHit.mPosition.distTo(p2) << endl;
     return closestHit;
 }
 
@@ -337,7 +341,7 @@ Dir3D getRefrectRay(Dir3D normal, Dir3D ray, float n) {
     return Dir3D();
 }
 
-Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
+Color getLighting(Hit hit, Point3D rayStart, Dir3D ray, int currentDepth) {
     Color totalColor = Color(0, 0, 0);
     for (Light* l : lights) {
         //cout << "light type = " << std::to_string(l->mType) << endl;
@@ -349,7 +353,7 @@ Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
             Hit lightIntersect = findIntersection((hit.mPosition + hit.mNormal * 0.005f), sl->mPosition);
             if (!lightIntersect.mIntersected) {
                 Dir3D lightToSphere = (hit.mPosition) - sl->mPosition;
-                float angleToLight = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / M_PI;
+                float angleToLight = acos(dot(lightToSphere.normalized(), sl->mDirection.normalized())) * 180.0 / pi;
                 float deflectionScaling = dot(hit.mNormal, -1.f * sl->mDirection.normalized());
                 float dist = (sl->mPosition).distToSqr(hit.mPosition);
                 float coefficient = 1.f / dist;
@@ -391,8 +395,8 @@ Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
         }
         else if (l->mType == POINT) {
             PointLight* pl = (PointLight*)(l);
-            Dir3D lightDir = pl->mPosition - (hit.mPosition + hit.mNormal * 0.0f);
-            Hit lightIntersect = findIntersection(hit.mPosition + hit.mNormal * 0.05f, pl->mPosition);
+            Dir3D lightDir = pl->mPosition - (hit.mPosition);
+            Hit lightIntersect = findIntersection(pl->mPosition, hit.mPosition + hit.mNormal*0.005);
             if (!lightIntersect.mIntersected) {
                 float dist = (pl->mPosition).distToSqr(hit.mPosition);
                 float coefficient = 1.f / dist;
@@ -417,14 +421,15 @@ Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
                 totalColor = totalColor + coefficient * ks * I * std::pow(std::max(0.f, dot(n, h)), p);
                 
             }
+           
         }
         
     }
 
-    if (mCurrentDepth < maxDepth) {
+    if (currentDepth < maxDepth) {
         //REFLECT 
         Dir3D reflectDir = getReflectRay(hit, ray);
-        totalColor = totalColor + hit.mMaterial.mSpecularColor * evaluateRayTree(hit.mPosition + 0.005f * reflectDir, reflectDir);
+        totalColor = totalColor + hit.mMaterial.mSpecularColor * evaluateRayTree(hit.mPosition + 0.005f * reflectDir, reflectDir, currentDepth);
 
 
         //REFRACT
@@ -436,23 +441,19 @@ Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
                 //into object
                 Dir3D refractDir = getRefrectRay(hit.mNormal, ray, hit.mMaterial.mRefractionIndex);
                 if (refractDir.magnitudeSqr() > 0.05) {
-                    refractedColor = evaluateRayTree(hit.mPosition - 0.05f * hit.mNormal, refractDir);
+                    refractedColor = evaluateRayTree(hit.mPosition - 0.05f * hit.mNormal, refractDir, currentDepth);
                 }
-                
-                //totalColor = totalColor + hit.mMaterial.mTransmissiveColor * evaluateRayTree(hit.mPosition + 0.0001f * refractDir, refractDir);
             }
             else {
                 //out of object
-               //cout << beersScale << endl;
-                //if (abs(beersScale.r) > 0.0001 && abs(beersScale.g) > 0.0001 && abs(beersScale.b) > 0.0001) cout << beersScale << endl;
-
                 Dir3D refractDir = getRefrectRay(-1.f * hit.mNormal, ray, 1 / hit.mMaterial.mRefractionIndex);
                 if (refractDir.magnitudeSqr() > 0.05) {
                     float t = rayStart.distTo(hit.mPosition);
-                    //kr = std::exp(-hit.mMaterial.mAmbientColor.r * t);
-                    //kg = std::exp(-hit.mMaterial.mAmbientColor.g * t);
-                    //kb = std::exp(-hit.mMaterial.mAmbientColor.b * t);
-                    refractedColor = evaluateRayTree(hit.mPosition + 0.05f * hit.mNormal, refractDir);
+                    //beers law values
+                    kr = std::exp(-hit.mMaterial.mAmbientColor.r * t);
+                    kg = std::exp(-hit.mMaterial.mAmbientColor.g * t);
+                    kb = std::exp(-hit.mMaterial.mAmbientColor.b * t);
+                    refractedColor = evaluateRayTree(hit.mPosition + 0.05f * hit.mNormal, refractDir, currentDepth);
                 }
             }
 
@@ -463,12 +464,11 @@ Color getLighting(Hit hit, Point3D rayStart, Dir3D ray) {
     return totalColor.getTonemapped();
 }
 
-Color evaluateRayTree(Point3D rayStart, Dir3D ray) {
-    mCurrentDepth++;
+Color evaluateRayTree(Point3D rayStart, Dir3D ray, int currentDepth) {
     Line3D rayLine = vee(rayStart, ray).normalized();
     Hit myHit = findIntersection(rayStart, rayLine);
     if (myHit.mIntersected) {
-        return getLighting(myHit, rayStart, ray); 
+        return getLighting(myHit, rayStart, ray, currentDepth+1); 
     }
     else {
         return background;

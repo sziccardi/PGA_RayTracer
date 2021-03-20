@@ -23,6 +23,7 @@
 //Scene file parser
 #include "parse_pga.h"
 
+float pi = 3.1415926;
 
 //INTERSECTIONS
 Hit findIntersection(Point3D rayStart, Line3D rayLine);
@@ -37,11 +38,10 @@ Coord3D getBarycentricCoord(Point3D p, Triangle tri);
 
 
 //LIGHTING
-int mCurrentDepth = 0;
 Dir3D getReflectRay(Hit hit, Dir3D ray);
 Dir3D getRefrectRay(Dir3D normal, Dir3D ray, float n);
-Color getLighting(Hit hit, Point3D rayStart, Dir3D ray);
-Color evaluateRayTree(Point3D rayStart, Dir3D ray);
+Color getLighting(Hit hit, Point3D rayStart, Dir3D ray, int currentDepth);
+Color evaluateRayTree(Point3D rayStart, Dir3D ray, int currentDepth);
 
 // Sampling
 float randomPixelLocationNoise(float noiseSize);
