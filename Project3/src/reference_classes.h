@@ -9,6 +9,7 @@
 
 enum LightType { AMBIENT, POINT, DIRECTIONAL, SPOT };
 enum SamplingType { NONE, JITTERED };
+enum ObjectType { OBJECTNONE, TRIMESH, SPHERE };
 
 // ---------------------------------
 //  Define Primatives
@@ -104,35 +105,21 @@ struct Vertex {
 	}
 };
 
-struct Object {
-	Material mMaterial;
-	Point3D mCenter;
-	Object(Material m, Point3D position) {
-		mMaterial = m;
-		mCenter = position;
-	}
-};
-
-struct Sphere : Object {
-	float mRadius;
-	Sphere(Material m, Point3D position, float radius) : Object (m, position) {
-		mRadius = radius;
-	}
-};
-
-struct Triangle : Object {
+struct Triangle {
 	int mVert1 = -1, mVert2 = -1, mVert3 = -1;
 	int mNorm1 = -1, mNorm2 = -1, mNorm3 = -1;
 	Dir3D mNormal;
 	bool mUseBarycentric;
-	Triangle(int vert1Index, int vert2Index, int vert3Index, Point3D avgPos, Dir3D normal, Material m) : Object(m, avgPos) {
+	Point3D mCenterPoint;
+	Triangle(int vert1Index, int vert2Index, int vert3Index, Point3D avgPos, Dir3D normal, Material m) {
 		mVert1 = vert1Index;
 		mVert2 = vert2Index;
 		mVert3 = vert3Index;
 		mNormal = normal;
 		mUseBarycentric = false;
+		mCenterPoint = avgPos;
 	}
-	Triangle(int vert1Index, int vert2Index, int vert3Index, Dir3D norm, int norm1Index, int norm2Index, int norm3Index, Point3D avgPos, Material m) : Object(m, avgPos) {
+	Triangle(int vert1Index, int vert2Index, int vert3Index, Dir3D norm, int norm1Index, int norm2Index, int norm3Index, Point3D avgPos, Material m) {
 		mVert1 = vert1Index;
 		mVert2 = vert2Index;
 		mVert3 = vert3Index;
@@ -141,8 +128,48 @@ struct Triangle : Object {
 		mNorm3 = norm3Index;
 		mNormal = norm;
 		mUseBarycentric = true;
+		mCenterPoint = avgPos;
 	}
 };
+
+
+struct Object {
+	float mBoundingWidth, mBoundingHeight, mBoundingDepth;
+	Material mMaterial;
+	Point3D mCenter;
+	ObjectType mType = OBJECTNONE;
+	Object(Material m = Material(), Point3D position = Point3D()) {
+		mMaterial = m;
+		mCenter = position;
+	}
+};
+
+struct TriMesh : Object {
+	std::vector<Triangle> mTriangles;
+	TriMesh() : Object() {}
+	TriMesh(std::vector<Triangle> triangles, float width, float height, float depth, Point3D avgPos, Material m) : Object(m, avgPos) {
+		mBoundingDepth = depth;
+		mBoundingHeight = height;
+		mBoundingWidth = width;
+
+		mTriangles = triangles;
+
+		mType = TRIMESH;
+	}
+};
+
+struct Sphere : Object {
+	float mRadius;
+	Sphere(Material m, Point3D position, float radius) : Object (m, position) {
+		mRadius = radius;
+		mBoundingDepth = 2 * radius;
+		mBoundingHeight = 2 * radius;
+		mBoundingWidth = 2 * radius;
+
+		mType = SPHERE;
+	}
+};
+
 
 struct Light { //basically ambient
 	LightType mType = AMBIENT;

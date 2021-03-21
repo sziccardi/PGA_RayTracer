@@ -32,9 +32,8 @@ Dir3D right = Dir3D(1,0,0).normalized();
 float halfAngleVFOV = 45; 
 
 //Scene (Sphere) Parmaters
-std::vector<Sphere> spheres;
+std::vector<Object*> objects;
 std::vector<Light*> lights;
-Material currentMaterial = Material(0, 0, 0, 1, 1, 1, 0, 0, 0, 5, 0, 0, 0, 1);
 Color background = Color(0, 0, 0);
 float maxDepth = 5.f;
 //Scene (Triangles) Parmaters
@@ -42,27 +41,38 @@ float maxVerts = -1;
 float maxNorms = -1;
 std::vector<Vertex> verts;
 std::vector<Dir3D> norms;
-std::vector<Triangle> tris;
+//std::vector<Triangle> tris;
 
 // Sampling
 Sampling sampling = Sampling(NONE);
 
 
 void resetScene() {
-    spheres.clear();
+    for (Object* o : objects) {
+        delete(o);
+    }
+    objects.clear();
+    for (Light* l : lights) {
+        delete(l);
+    }
     lights.clear();
-    currentMaterial = Material(0, 0, 0, 1, 1, 1, 0, 0, 0, 5, 0, 0, 0, 1);
     background = Color(0, 0, 0);
     maxDepth = 5.f;
     maxVerts = -1;
     maxNorms = -1;
     verts.clear();
     norms.clear();
-    tris.clear();
 }
 
 void parseSceneFile(std::string fileName){
     resetScene();
+    Material currentMaterial = Material(0, 0, 0, 1, 1, 1, 0, 0, 0, 5, 0, 0, 0, 1);
+    float currentMinX = 1000000000;
+    float currentMinY = 1000000000;
+    float currentMinZ = 1000000000;
+    float currentMaxX = -1000000000;
+    float currentMaxY = -1000000000;
+    float currentMaxZ = -1000000000;
     std::string line;
     std::ifstream myFile;
 	myFile.open(fileName);
@@ -124,8 +134,8 @@ void parseSceneFile(std::string fileName){
                    float r = std::stof(stringR);
 
                    cout << "r = " << std::to_string(r) << endl;
-
-                   spheres.push_back(Sphere(currentMaterial, Point3D(x, y, z), r));
+                   
+                   objects.push_back(new Sphere(currentMaterial, Point3D(x, y, z), r));
                }
 
                command = "film_resolution:";
@@ -425,6 +435,13 @@ void parseSceneFile(std::string fileName){
                    cout << "new ior = " << std::to_string(ior) << endl;
 
                    currentMaterial = Material(ambient, diffuse, specular, ns, transmissive, ior);
+               }
+
+               command = "trimesh:";
+               found = line.find(command);
+               if (found != std::string::npos) {
+                   cout << "new trimesh" << endl;
+                   objects.push_back(new TriMesh());
                }
 
                command = "point_light:";
@@ -852,14 +869,50 @@ void parseSceneFile(std::string fileName){
                     Point3D avgPos = Point3D();
                     Dir3D norm = Dir3D();
                     if (i < verts.size() && j < verts.size() && k < verts.size()) {
-                        avgPos = (verts[i].mPosition + verts[j].mPosition + verts[k].mPosition) / 3.f;
+                        Point3D v1 = verts[i].mPosition;
+                        Point3D v2 = verts[j].mPosition;
+                        Point3D v3 = verts[k].mPosition;
 
-                        Dir3D edge1 = verts[j].mPosition - verts[i].mPosition;
-                        Dir3D edge2 = verts[k].mPosition - verts[i].mPosition;
+                        if (v1.x < currentMinX) currentMinX = v1.x;
+                        if (v1.y < currentMinY) currentMinY = v1.y;
+                        if (v1.z < currentMinZ) currentMinZ = v1.z;
+                        if (v1.x > currentMaxX) currentMaxX = v1.x;
+                        if (v1.y > currentMaxY) currentMaxY = v1.y;
+                        if (v1.z > currentMaxZ) currentMaxZ = v1.z;
+
+                        if (v2.x < currentMinX) currentMinX = v2.x;
+                        if (v2.y < currentMinY) currentMinY = v2.y;
+                        if (v2.z < currentMinZ) currentMinZ = v2.z;
+                        if (v2.x > currentMaxX) currentMaxX = v2.x;
+                        if (v2.y > currentMaxY) currentMaxY = v2.y;
+                        if (v2.z > currentMaxZ) currentMaxZ = v2.z;
+
+                        if (v3.x < currentMinX) currentMinX = v3.x;
+                        if (v3.y < currentMinY) currentMinY = v3.y;
+                        if (v3.z < currentMinZ) currentMinZ = v3.z;
+                        if (v3.x > currentMaxX) currentMaxX = v3.x;
+                        if (v3.y > currentMaxY) currentMaxY = v3.y;
+                        if (v3.z > currentMaxZ) currentMaxZ = v3.z;
+
+                        avgPos = (v1 + v2 + v3) / 3.f;
+                        Dir3D edge1 = v2 - v1;
+                        Dir3D edge2 = v3 - v1;
                         norm = cross(edge2, edge1).normalized();
                     }
-
-                    tris.push_back(Triangle(i, j, k, avgPos, norm, currentMaterial));
+                    Triangle newTri = Triangle(i, j, k, avgPos, norm, currentMaterial);
+                    if (objects.empty()) {
+                        cout << "YOURE ADDING A TRIANGLE WITHOUT STARTING A MESH" << endl;
+                    }
+                    else {
+                        int last = objects.size() - 1;
+                        if (objects[last]->mType == TRIMESH) {
+                            TriMesh* t = (TriMesh*)(objects[last]);
+                            t->mTriangles.push_back(newTri);
+                        }
+                        else {
+                            cout << "YOU HAVENT ADDED A MESH YET, CANT ADD A TRIANGLE" << endl;
+                        }
+                    }
                }
 
                command = "normal_triangle:";
@@ -930,7 +983,20 @@ void parseSceneFile(std::string fileName){
                        cout << "COULDNT ADD NORMALS YET" << endl;
                    }
 
-                   tris.push_back(Triangle(i, j, k, norm, l, m, n, avgPos, currentMaterial));
+                   Triangle newTri = Triangle(i, j, k, norm, l, m, n, avgPos, currentMaterial);
+                   if (objects.empty()) {
+                       cout << "YOURE ADDING A TRIANGLE WITHOUT STARTING A MESH" << endl;
+                   }
+                   else {
+                       int last = objects.size() - 1;
+                       if (objects[last]->mType == TRIMESH) {
+                           TriMesh* t = (TriMesh*)(objects[last]);
+                           t->mTriangles.push_back(newTri);
+                       }
+                       else {
+                           cout << "YOU HAVENT ADDED A MESH YET, CANT ADD A TRIANGLE" << endl;
+                       }
+                   }
                }
            }
         }
@@ -942,9 +1008,8 @@ void parseSceneFile(std::string fileName){
     }
 
     printf("found %d lights\n", lights.size());
-    printf("found %d spheres\n", spheres.size());
+    printf("found %d objects\n", objects.size());
     printf("found %d vertices\n", verts.size());
-    printf("found %d triangles\n", tris.size());
   printf("Orthagonal Camera Basis:\n");
   right = cross(up, forward);
   

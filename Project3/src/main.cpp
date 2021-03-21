@@ -176,7 +176,7 @@ Hit raySphereIntersect(Point3D rayStart, Line3D rayLine, Point3D sphereCenter, f
     return Hit();
 }
 
-Hit rayTriIntersect(Point3D rayStart, Line3D rayLine, Triangle tri) {
+Hit rayTriIntersect(Point3D rayStart, Line3D rayLine, Triangle tri, Material m) {
     Plane3D triPlane = vee(verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition);
     HomogeneousPoint3D hitPoint = wedge(rayLine, triPlane);
     Point3D point = Point3D(hitPoint.x / hitPoint.w, hitPoint.y / hitPoint.w, hitPoint.z / hitPoint.w);
@@ -192,14 +192,14 @@ Hit rayTriIntersect(Point3D rayStart, Line3D rayLine, Triangle tri) {
         int scale3 = 1;
         //if (dot(norms[tri.mNorm3], rayLine.dir()) > 0) scale3 = -1;
         Dir3D myNorm = scale1 * bary.mU * norms[tri.mNorm1] + scale2 * bary.mV * norms[tri.mNorm2] + scale3 * bary.mW * norms[tri.mNorm3];
-        return Hit(point, myNorm.normalized(), tri.mMaterial);
+        return Hit(point, myNorm.normalized(), m);
     }
     int scale = 1;
     if (dot(tri.mNormal, rayLine.dir()) > dot(-1 * tri.mNormal, rayLine.dir())) scale = -1;
-    return Hit(point, scale * tri.mNormal, tri.mMaterial); //intersect with flat triangle
+    return Hit(point, scale * tri.mNormal, m); //intersect with flat triangle
 }
 
-Hit rayTriIntersect(Point3D rayStart, Point3D rayEnd, Triangle tri) {
+Hit rayTriIntersect(Point3D rayStart, Point3D rayEnd, Triangle tri, Material m) {
     Line3D rayLine = vee(rayStart, rayEnd);
     Plane3D triPlane = vee(verts[tri.mVert1].mPosition, verts[tri.mVert2].mPosition, verts[tri.mVert3].mPosition);
 
@@ -221,57 +221,61 @@ Hit rayTriIntersect(Point3D rayStart, Point3D rayEnd, Triangle tri) {
         int scale3 = 1;
         if (dot(norms[tri.mNorm3], (rayStart - rayEnd)) > 0.05) scale3 = -1;
         Dir3D myNorm = scale1 * bary.mU * norms[tri.mNorm1] + scale2 * bary.mV * norms[tri.mNorm2] + scale3 * bary.mW * norms[tri.mNorm3];
-        return Hit(point, myNorm, tri.mMaterial);
+        return Hit(point, myNorm, m);
     }
     int scale = 1;
     if (dot(tri.mNormal, (rayStart - rayEnd)) > 0.05) scale = -1;
-    return Hit(point, scale * tri.mNormal, tri.mMaterial); //intersect with flat triangle
+    return Hit(point, scale * tri.mNormal, m); //intersect with flat triangle
 }
 
 Hit findIntersection(Point3D rayStart, Line3D rayLine) {
     Hit closestHit = Hit();
     float currMinDist = 10000000000000;
     
-    for (Triangle tri : tris) {
-        if (tri.mNormal == 0.f && tri.mNormal.y == 0.f && tri.mNormal.z == 0.f) {
-            Point3D avgPos = (verts[tri.mVert1].mPosition + verts[tri.mVert2].mPosition + verts[tri.mVert3].mPosition) / 3.f;
+    for (Object* o : objects) {
+        if (o->mType == TRIMESH) {
+            TriMesh* tm = (TriMesh*)o;
+            for (Triangle tri : tm->mTriangles) {
+                if (tri.mNormal == 0.f && tri.mNormal.y == 0.f && tri.mNormal.z == 0.f) {
+                    Point3D avgPos = (verts[tri.mVert1].mPosition + verts[tri.mVert2].mPosition + verts[tri.mVert3].mPosition) / 3.f;
 
-            Dir3D edge1 = verts[tri.mVert2].mPosition - verts[tri.mVert1].mPosition;
-            Dir3D edge2 = verts[tri.mVert3].mPosition - verts[tri.mVert1].mPosition;
-            Dir3D norm = cross(edge1, edge2).normalized();
+                    Dir3D edge1 = verts[tri.mVert2].mPosition - verts[tri.mVert1].mPosition;
+                    Dir3D edge2 = verts[tri.mVert3].mPosition - verts[tri.mVert1].mPosition;
+                    Dir3D norm = cross(edge1, edge2).normalized();
 
-            if (dot(rayLine.dir(), norm) > 0) norm = norm * -1.f;
+                    if (dot(rayLine.dir(), norm) > 0) norm = norm * -1.f;
 
-            tri.mCenter = avgPos;
-            tri.mNormal = norm;
+                    tri.mCenterPoint = avgPos;
+                    tri.mNormal = norm;
+                }
+
+                Hit tempHit = rayTriIntersect(rayStart, rayLine, tri, o->mMaterial);
+                if (tempHit.mIntersected) {
+                    if (dot(tempHit.mPosition - rayStart, rayLine.dir()) >= 0) {
+                        float tempDist = (tempHit.mPosition - rayStart).magnitude();
+                        if (tempDist < currMinDist) {
+                            currMinDist = tempDist;
+                            tempHit.mMaterial = o->mMaterial;
+                            closestHit = tempHit;
+                            //cout << "hit at " << tempHit.mPosition << endl;
+                        }
+                    }
+                }
+            }
         }
-
-        Hit tempHit = rayTriIntersect(rayStart, rayLine, tri);
-        if (tempHit.mIntersected) {
-            if (dot(tempHit.mPosition - rayStart, rayLine.dir()) >= 0) {
+        else if (o->mType == SPHERE) {
+            Sphere* s = (Sphere*)o;
+            Hit tempHit = raySphereIntersect_fast(rayStart, rayLine, s->mCenter, s->mRadius);
+            if (tempHit.mIntersected) {
                 float tempDist = (tempHit.mPosition - rayStart).magnitude();
                 if (tempDist < currMinDist) {
                     currMinDist = tempDist;
-                    tempHit.mMaterial = tri.mMaterial;
+                    tempHit.mMaterial = o->mMaterial;
                     closestHit = tempHit;
-                    //cout << "hit at " << tempHit.mPosition << endl;
                 }
             }
         }
     }
-    
-    for (Sphere s : spheres) {
-        Hit tempHit = raySphereIntersect_fast(rayStart, rayLine, s.mCenter, s.mRadius);
-        if (tempHit.mIntersected) {
-            float tempDist = (tempHit.mPosition - rayStart).magnitude();
-            if (tempDist < currMinDist) {
-                currMinDist = tempDist;
-                tempHit.mMaterial = s.mMaterial;
-                closestHit = tempHit;
-            }
-        }
-    }
-
     
     
     return closestHit;
@@ -280,48 +284,52 @@ Hit findIntersection(Point3D rayStart, Line3D rayLine) {
 Hit findIntersection(Point3D p1, Point3D p2) {
     Hit closestHit = Hit();
     float currMinDist = 10000000000;
+    for (Object* o : objects) {
+        if (o->mType == TRIMESH) {
+            TriMesh* tm = (TriMesh*)o;
+            for (Triangle tri : tm->mTriangles) {
+                if (tri.mNormal == 0.f && tri.mNormal.y == 0.f && tri.mNormal.z == 0.f) {
+                    Point3D avgPos = (verts[tri.mVert1].mPosition + verts[tri.mVert2].mPosition + verts[tri.mVert3].mPosition) / 3.f;
 
-    for (Triangle tri : tris) {
-        if (tri.mNormal == 0.f && tri.mNormal.y == 0.f && tri.mNormal.z == 0.f) {
-            Point3D avgPos = (verts[tri.mVert1].mPosition + verts[tri.mVert2].mPosition + verts[tri.mVert3].mPosition) / 3.f;
+                    Dir3D edge1 = verts[tri.mVert2].mPosition - verts[tri.mVert1].mPosition;
+                    Dir3D edge2 = verts[tri.mVert3].mPosition - verts[tri.mVert1].mPosition;
+                    Dir3D norm = cross(edge1, edge2).normalized();
 
-            Dir3D edge1 = verts[tri.mVert2].mPosition - verts[tri.mVert1].mPosition;
-            Dir3D edge2 = verts[tri.mVert3].mPosition - verts[tri.mVert1].mPosition;
-            Dir3D norm = cross(edge1, edge2).normalized();
+                    if (dot((p2 - p1), norm) > 0) norm = norm * -1.f;
 
-            if (dot((p2 - p1), norm) > 0) norm = norm * -1.f;
+                    tri.mCenterPoint = avgPos;
+                    tri.mNormal = norm;
+                }
 
-            tri.mCenter = avgPos;
-            tri.mNormal = norm;
-        }
-
-        Hit tempHit = rayTriIntersect(p2, p1, tri);
-        if (tempHit.mIntersected) {
-            float tempDist = tempHit.mPosition.distTo(p1);
-            if (tempDist < p1.distTo(p2)) {
-                if (tempDist < currMinDist) {
-                    currMinDist = tempDist;
-                    tempHit.mMaterial = tri.mMaterial;
-                    closestHit = tempHit;
+                Hit tempHit = rayTriIntersect(p2, p1, tri, o->mMaterial);
+                if (tempHit.mIntersected) {
+                    float tempDist = tempHit.mPosition.distTo(p1);
+                    if (tempDist < p1.distTo(p2)) {
+                        if (tempDist < currMinDist) {
+                            currMinDist = tempDist;
+                            tempHit.mMaterial = o->mMaterial;
+                            closestHit = tempHit;
+                        }
+                    }
                 }
             }
         }
-    }
-
-    for (Sphere s : spheres) {
-        Hit tempHit = lineSegmentSphereIntersect_fast(p1, p2, s.mCenter, s.mRadius);
-        if (tempHit.mIntersected) {
-            float tempDist = tempHit.mPosition.distTo(p1);
-            if (tempDist <= p2.distTo(p1)) {
-                if (tempDist < currMinDist) {
-                    currMinDist = tempDist;
-                    tempHit.mMaterial = s.mMaterial;
-                    closestHit = tempHit;
+        else if (o->mType == SPHERE) {
+            Sphere* s = (Sphere*)o;
+            Hit tempHit = lineSegmentSphereIntersect_fast(p1, p2, s->mCenter, s->mRadius);
+            if (tempHit.mIntersected) {
+                float tempDist = tempHit.mPosition.distTo(p1);
+                if (tempDist <= p2.distTo(p1)) {
+                    if (tempDist < currMinDist) {
+                        currMinDist = tempDist;
+                        tempHit.mMaterial = o->mMaterial;
+                        closestHit = tempHit;
+                    }
                 }
             }
+
         }
     }
-
     //cout << closestHit.mPosition.distTo(p2) << endl;
     return closestHit;
 }
