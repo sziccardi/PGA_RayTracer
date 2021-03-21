@@ -112,6 +112,7 @@ struct Triangle {
 	Dir3D mNormal;
 	bool mUseBarycentric;
 	Point3D mCenterPoint;
+	Material mMaterial;
 	Triangle(int vert1Index, int vert2Index, int vert3Index, Point3D avgPos, Dir3D normal, Material m) {
 		mVert1 = vert1Index;
 		mVert2 = vert2Index;
@@ -119,6 +120,7 @@ struct Triangle {
 		mNormal = normal;
 		mUseBarycentric = false;
 		mCenterPoint = avgPos;
+		mMaterial = m;
 	}
 	Triangle(int vert1Index, int vert2Index, int vert3Index, Dir3D norm, int norm1Index, int norm2Index, int norm3Index, Point3D avgPos, Material m) {
 		mVert1 = vert1Index;
@@ -130,6 +132,7 @@ struct Triangle {
 		mNormal = norm;
 		mUseBarycentric = true;
 		mCenterPoint = avgPos;
+		mMaterial = m;
 	}
 };
 

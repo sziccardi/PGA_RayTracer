@@ -341,20 +341,6 @@ Hit findIntersection(Point3D p1, Point3D p2) {
     float currMinDist = 10000000000;
     for (Object* o : objects) {
 
-        Plane3D leftPlane = vee(o->mCenter - Dir3D(o->mBoundingWidth / 2, 0, 0), o->mCenter - Dir3D(o->mBoundingWidth / 2, 1, 0), o->mCenter - Dir3D(o->mBoundingWidth / 2, 1, 1));
-        Plane3D rightPlane = vee(o->mCenter + Dir3D(o->mBoundingWidth / 2, 0, 0), o->mCenter + Dir3D(o->mBoundingWidth / 2, 1, 0), o->mCenter + Dir3D(o->mBoundingWidth / 2, 1, 1));
-        Plane3D bottomPlane = vee(o->mCenter - Dir3D(0, o->mBoundingHeight / 2, 0), o->mCenter - Dir3D(1, o->mBoundingHeight / 2, 0), o->mCenter - Dir3D(1, o->mBoundingHeight / 2, 1));
-        Plane3D topPlane = vee(o->mCenter + Dir3D(0, o->mBoundingHeight / 2, 0), o->mCenter + Dir3D(1, o->mBoundingHeight / 2, 0), o->mCenter + Dir3D(1, o->mBoundingHeight / 2, 1));
-        Plane3D backPlane = vee(o->mCenter - Dir3D(0, 0, o->mBoundingDepth / 2), o->mCenter - Dir3D(1, 0, o->mBoundingDepth / 2), o->mCenter - Dir3D(1, 1, o->mBoundingDepth / 2));
-        Plane3D frontPlane = vee(o->mCenter + Dir3D(0, 0, o->mBoundingDepth / 2), o->mCenter + Dir3D(1, 0, o->mBoundingDepth / 2), o->mCenter + Dir3D(1, 1, o->mBoundingDepth / 2));
-
-        Point3D leftIntersect = Point3D(wedge(p2 - p1, leftPlane));
-        Point3D rightIntersect = Point3D(wedge(p2 - p1, rightPlane));
-        Point3D bottomIntersect = Point3D(wedge(p2 - p1, bottomPlane));
-        Point3D topIntersect = Point3D(wedge(p2 - p1, topPlane));
-        Point3D backIntersect = Point3D(wedge(p2 - p1, backPlane));
-        Point3D frontIntersect = Point3D(wedge(p2 - p1, frontPlane));
-
         Point3D p1 = o->mCenter + Dir3D(-o->mBoundingWidth / 2, o->mBoundingHeight / 2, -o->mBoundingDepth / 2);
         Point3D p2 = o->mCenter + Dir3D(o->mBoundingWidth / 2, o->mBoundingHeight / 2, -o->mBoundingDepth / 2);
         Point3D p3 = o->mCenter + Dir3D(o->mBoundingWidth / 2, o->mBoundingHeight / 2, o->mBoundingDepth / 2);
@@ -363,6 +349,29 @@ Hit findIntersection(Point3D p1, Point3D p2) {
         Point3D p6 = o->mCenter + Dir3D(o->mBoundingWidth / 2, -o->mBoundingHeight / 2, -o->mBoundingDepth / 2);
         Point3D p7 = o->mCenter + Dir3D(o->mBoundingWidth / 2, -o->mBoundingHeight / 2, o->mBoundingDepth / 2);
         Point3D p8 = o->mCenter + Dir3D(-o->mBoundingWidth / 2, -o->mBoundingHeight / 2, o->mBoundingDepth / 2);
+        /*cout << "center: " << o->mCenter << endl;
+        cout << "p1: " << p1 << endl;
+        cout << "p2: " << p2 << endl;
+        cout << "p3: " << p3 << endl;
+        cout << "p4: " << p4 << endl;
+        cout << "p5: " << p5 << endl;
+        cout << "p6: " << p6 << endl;
+        cout << "p7: " << p7 << endl;
+        cout << "p8: " << p8 << endl;*/
+
+        Plane3D leftPlane = vee(p1, p4, p5);
+        Plane3D rightPlane = vee(p2, p3, p7);
+        Plane3D bottomPlane = vee(p5, p6, p7);
+        Plane3D topPlane = vee(p1, p2, p3);
+        Plane3D backPlane = vee(p4, p3, p7);
+        Plane3D frontPlane = vee(p1, p2, p6);
+
+        Point3D leftIntersect = Point3D(wedge(p2-p1, leftPlane));
+        Point3D rightIntersect = Point3D(wedge(p2 - p1, rightPlane));
+        Point3D bottomIntersect = Point3D(wedge(p2 - p1, bottomPlane));
+        Point3D topIntersect = Point3D(wedge(p2 - p1, topPlane));
+        Point3D backIntersect = Point3D(wedge(p2 - p1, backPlane));
+        Point3D frontIntersect = Point3D(wedge(p2 - p1, frontPlane));
 
         if (pointInQuad(frontIntersect, p1, p2, p6, p5) &&
             pointInQuad(backIntersect, p4, p3, p7, p8) &&
