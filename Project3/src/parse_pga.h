@@ -73,6 +73,7 @@ void parseSceneFile(std::string fileName){
     float currentMaxX = -1000000000;
     float currentMaxY = -1000000000;
     float currentMaxZ = -1000000000;
+    Point3D currentAvgPos = Point3D(0, 0, 0);
     std::string line;
     std::ifstream myFile;
 	myFile.open(fileName);
@@ -441,7 +442,10 @@ void parseSceneFile(std::string fileName){
                found = line.find(command);
                if (found != std::string::npos) {
                    cout << "new trimesh" << endl;
-                   objects.push_back(new TriMesh());
+                   TriMesh* tm = new TriMesh();
+                   tm->mMaterial = currentMaterial;
+                   currentAvgPos = Point3D(0, 0, 0);
+                   objects.push_back(tm);
                }
 
                command = "point_light:";
@@ -870,8 +874,11 @@ void parseSceneFile(std::string fileName){
                     Dir3D norm = Dir3D();
                     if (i < verts.size() && j < verts.size() && k < verts.size()) {
                         Point3D v1 = verts[i].mPosition;
+                        currentAvgPos = currentAvgPos + v1;
                         Point3D v2 = verts[j].mPosition;
+                        currentAvgPos = currentAvgPos + v2;
                         Point3D v3 = verts[k].mPosition;
+                        currentAvgPos = currentAvgPos + v3;
 
                         if (v1.x < currentMinX) currentMinX = v1.x;
                         if (v1.y < currentMinY) currentMinY = v1.y;
@@ -904,9 +911,14 @@ void parseSceneFile(std::string fileName){
                         cout << "YOURE ADDING A TRIANGLE WITHOUT STARTING A MESH" << endl;
                     }
                     else {
-                        int last = objects.size() - 1;
-                        if (objects[last]->mType == TRIMESH) {
-                            TriMesh* t = (TriMesh*)(objects[last]);
+                        if (objects.back()->mType == TRIMESH) {
+                            TriMesh* t = (TriMesh*)(objects.back());
+
+                            t->mBoundingDepth = (currentMaxZ - currentMinZ);
+                            t->mBoundingWidth = (currentMaxX - currentMinX);
+                            t->mBoundingHeight = (currentMaxY - currentMinY);
+
+                            t->mCenter = currentAvgPos / (t->mTriangles.size());
                             t->mTriangles.push_back(newTri);
                         }
                         else {
@@ -988,9 +1000,8 @@ void parseSceneFile(std::string fileName){
                        cout << "YOURE ADDING A TRIANGLE WITHOUT STARTING A MESH" << endl;
                    }
                    else {
-                       int last = objects.size() - 1;
-                       if (objects[last]->mType == TRIMESH) {
-                           TriMesh* t = (TriMesh*)(objects[last]);
+                       if (objects.back()->mType == TRIMESH) {
+                           TriMesh* t = (TriMesh*)(objects.back());
                            t->mTriangles.push_back(newTri);
                        }
                        else {

@@ -6,6 +6,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 enum LightType { AMBIENT, POINT, DIRECTIONAL, SPOT };
 enum SamplingType { NONE, JITTERED };
@@ -146,7 +147,7 @@ struct Object {
 
 struct TriMesh : Object {
 	std::vector<Triangle> mTriangles;
-	TriMesh() : Object() {}
+	TriMesh() : Object() { mType = TRIMESH; }
 	TriMesh(std::vector<Triangle> triangles, float width, float height, float depth, Point3D avgPos, Material m) : Object(m, avgPos) {
 		mBoundingDepth = depth;
 		mBoundingHeight = height;

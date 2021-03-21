@@ -227,11 +227,6 @@ struct MultiVector{
 
 };
 
-std::ostream& operator<<(std::ostream& os, const MultiVector& mv){
-  return os << std::string(mv);
-}
-
-
 //MultiVector products
 inline MultiVector wedge(MultiVector lhs, MultiVector rhs){
   return lhs.wedge(rhs);

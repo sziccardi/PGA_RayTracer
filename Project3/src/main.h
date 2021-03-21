@@ -14,7 +14,7 @@
 #include "image_lib.h" //Defines an image class and a color class
 
 //#3D PGA
-#include "PGA_3D.h"
+#include "print_PGA.h"
 #include "reference_classes.h"
 
 //High resolution timer

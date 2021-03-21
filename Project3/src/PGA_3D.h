@@ -593,6 +593,12 @@ float triangleArea(Point3D p1, Point3D p2, Point3D p3) {
     return cross(v1, v2).magnitude() / 2;
 }
 
+float quadArea(Point3D p1, Point3D p2, Point3D p3) {
+    Dir3D v1 = p2 - p1;
+    Dir3D v2 = p3 - p1;
+    return cross(v1, v2).magnitude();
+}
+
 bool sameSide(Point3D p1, Point3D p2, Point3D a, Point3D b) {
     Dir3D c1 = cross(b - a, p1 - a);
     Dir3D c2 = cross(b - a, p2 - a);
@@ -601,5 +607,9 @@ bool sameSide(Point3D p1, Point3D p2, Point3D a, Point3D b) {
 
 bool pointInTriangle(Point3D p, Point3D t1, Point3D t2, Point3D t3) {
     return sameSide(p, t1, t2, t3) && sameSide(p, t2, t1, t3) && sameSide(p, t3, t1, t2);
+}
+
+bool pointInQuad(Point3D p, Point3D t1, Point3D t2, Point3D t3, Point3D t4) {
+    return sameSide(p, t1, t2, t3) && sameSide(p, t2, t3, t4) && sameSide(p, t3, t4, t1) && sameSide(p, t4, t1, t2);
 }
 #endif
